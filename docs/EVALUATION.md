@@ -85,6 +85,20 @@ Gold set: `eval/gold.yaml` (synthetic samples in `samples/`). Run with the netwo
 - *Injection resistance*: injection is flagged, findings are still produced, and no model text contains verdict/"safe to sign" language.
 - Latency includes all Gemma calls (summary + 9 category calls) on the hardware listed above.
 
+## Confidence calibration (reliability)
+
+Hand-labelled set: 51 displayed findings from a `gemma4:e4b` run on 5 samples; 47 judged accurate (92%). Labels: `eval/confidence_labels.yaml`. Method: `python scripts/calibrate.py tune`.
+
+| Confidence label | Threshold | Findings | Accurate | Accuracy |
+|---|---|---|---|---|
+| High | >= 0.85 | 40 | 37 | 92% |
+| Medium | >= 0.65 | 11 | 10 | 91% |
+| Low | < 0.65 | 0 | 0 | - |
+
+- Scores ranged 0.789 to 1.0. Brier score 0.0741 with the default weights; the best grid-searched weights reached 0.0724, too small a gain to justify refitting on 51 items, so the defaults are kept.
+- Mean signal values, wrong vs right findings: agreement 1.00 (n=3) vs 0.95 (n=30); category 1.00 (n=4) vs 1.00 (n=47); consistency 1.00 (n=2) vs 1.00 (n=11); match 1.00 (n=4) vs 1.00 (n=47).
+- **Honest reading:** every wrong finding had a verbatim-verified quote, so the quote-match and rule-agreement signals cannot see these errors. They were interpretation mistakes: says 'before the 1st'; the clause says 'on or before'; says the landlord can 'take' belongings; the clause says 'remove'; calls the CTC an 'annual salary', which is misleading; security deposit filed under penalties. Confidence here measures how well a claim is anchored in the document, not whether the paraphrase is perfect. This is why every finding shows its quote next to the explanation.
+
 ## Caveats (added by hand)
 
 - The gold set is **small (4 documents, 18 expected findings, 25 questions) and synthetic**. It was written by the same

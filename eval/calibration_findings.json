@@ -1,0 +1,918 @@
+{
+ "model": "gemma4:e4b",
+ "findings": [
+  {
+   "id": "rental_clean.txt#0",
+   "doc": "rental_clean.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Monthly Rent Payment",
+   "explanation": "The tenant must pay the monthly rent of Rs. 25,000 on or before the 5th day of every month.",
+   "quote": "The Tenant shall pay a monthly rent of Rs. 25,000/- (Rupees Twenty Five Thousand only) to the Landlord on or before the 5th day of every English calendar month",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#1",
+   "doc": "rental_clean.txt",
+   "category": "termination",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Landlord Termination for Non-Payment",
+   "explanation": "The landlord can end the agreement if the tenant misses rent payments for two months in a row, provided the landlord first gives the tenant 15 days' written notice to pay what is owed.",
+   "quote": "The Landlord may terminate this agreement if the Tenant fails to pay rent for two consecutive months, after giving the Tenant 15 days' written notice to pay the arrears",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#2",
+   "doc": "rental_clean.txt",
+   "category": "restrictions",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Use of Property",
+   "explanation": "You must only use the property for living purposes and cannot run any business from it.",
+   "quote": "The Tenant shall use the Premises for residential purposes only and shall not carry on any commercial activity",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#3",
+   "doc": "rental_clean.txt",
+   "category": "restrictions",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Subletting or Assigning",
+   "explanation": "You cannot rent out or transfer your tenancy to someone else without getting written permission from the Landlord first.",
+   "quote": "The Tenant shall not sublet, assign or part with possession of the Premises or any part thereof without the prior written consent of the Landlord",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#4",
+   "doc": "rental_clean.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Lock-in Period",
+   "explanation": "For the first three months, neither the tenant nor the landlord can end the agreement unless one of them breaks the rules of the agreement.",
+   "quote": "Both parties agree to a lock-in period of 3 (three) months from the commencement date. During the lock-in period neither party may terminate this agreement except for breach",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_clean.txt#5",
+   "doc": "rental_clean.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "rules",
+   "title": "Amount mentioned: Rs. 2,500/-",
+   "explanation": "The document states an amount of Rs. 2,500/- in this clause.",
+   "quote": "4.2 The monthly society maintenance charge of Rs. 2,500/- shall be paid by the Landlord",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": false,
+   "confidence": 1.0
+  },
+  {
+   "id": "rental_clean.txt#6",
+   "doc": "rental_clean.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Late Payment Fee",
+   "explanation": "If the rent is not paid by the 10th day of the month, the tenant must pay a late fee of Rs. 500 for every week the payment is late.",
+   "quote": "If the rent is not paid by the 10th day of the month, the Tenant shall pay a late fee of Rs. 500/- for each week of delay",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#7",
+   "doc": "rental_clean.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Security Deposit Amount",
+   "explanation": "The tenant has paid a security deposit of Rs. 1,00,000, and this deposit does not earn any interest.",
+   "quote": "The Tenant has paid an interest-free security deposit of Rs. 1,00,000/- (Rupees One Lakh only) to the Landlord, the receipt of which the Landlord hereby acknowledges",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#8",
+   "doc": "rental_clean.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Agreement Term",
+   "explanation": "The rental period is set for 11 months, starting on March 1, 2026, and ending on January 31, 2027.",
+   "quote": "The tenancy shall be for a period of 11 (eleven) months commencing from 1st March, 2026 and ending on 31st January, 2027",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#9",
+   "doc": "rental_clean.txt",
+   "category": "restrictions",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Alterations to the Property",
+   "explanation": "You cannot make any changes to the structure of the property without getting written permission from the Landlord first.",
+   "quote": "The Tenant shall not make any structural alterations to the Premises without the prior written consent of the Landlord",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#10",
+   "doc": "rental_clean.txt",
+   "category": "liability",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Dispute Resolution and Courts",
+   "explanation": "If there is a disagreement about this agreement, the courts in Bengaluru have the sole authority to handle it.",
+   "quote": "Any dispute arising out of this agreement shall be subject to the exclusive jurisdiction of the courts at Bengaluru",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_clean.txt#11",
+   "doc": "rental_clean.txt",
+   "category": "notice",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Termination Notice Period",
+   "explanation": "After the initial lock-in period, either the tenant or the landlord can end the agreement by giving one month's written notice to the other party.",
+   "quote": "After the lock-in period, either party may terminate this agreement by giving one month's prior written notice to the other party",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5
+   },
+   "ambiguous": true,
+   "confidence": 0.789
+  },
+  {
+   "id": "rental_clean.txt#12",
+   "doc": "rental_clean.txt",
+   "category": "liability",
+   "kind": "explicit",
+   "severity": "low",
+   "source": "llm",
+   "title": "Governing Law",
+   "explanation": "This agreement will be controlled by the laws of India.",
+   "quote": "This agreement shall be governed by the laws of India",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_tricky.txt#0",
+   "doc": "rental_tricky.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Monthly Rent Payment",
+   "explanation": "You must pay the monthly license fee of Rs. 32,000/- before the 1st day of every month.",
+   "quote": "The Licensee shall pay a monthly license fee of Rs. 32,000/- in advance on or before the 1st day of each month",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_tricky.txt#1",
+   "doc": "rental_tricky.txt",
+   "category": "penalties",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Late Payment Interest and Penalty",
+   "explanation": "If you are late paying, you will be charged 24% interest per year, plus a fixed penalty of Rs. 1,000 for every day you are late.",
+   "quote": "Any delay in payment shall attract interest at 24% per annum along with a penalty of Rs. 1,000/- per day of delay",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_tricky.txt#2",
+   "doc": "rental_tricky.txt",
+   "category": "liability",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Indemnity for Losses",
+   "explanation": "This means the tenant must cover the landlord for any losses, costs, or damages that happen because the tenant used the property.",
+   "quote": "The Licensee shall indemnify the Licensor against all losses, costs and damages arising out of the Licensee's use of the premises",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_tricky.txt#3",
+   "doc": "rental_tricky.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Termination after Lock-in Period",
+   "explanation": "The tenant can only end the agreement after the initial 11-month lock-in period is over, and they must give 3 months' notice to the landlord.",
+   "quote": "The Licensee may terminate this license only after the expiry of the lock-in period of 11 months, by giving 3 months' notice to the Licensor",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_tricky.txt#4",
+   "doc": "rental_tricky.txt",
+   "category": "payments",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Rent Increase Power",
+   "explanation": "The landlord can change the license fee whenever they want, and the new fee starts from the date they tell you.",
+   "quote": "The Licensor may revise the license fee from time to time at its sole discretion, and the revised fee shall be payable from the date communicated by the Licensor",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_tricky.txt#5",
+   "doc": "rental_tricky.txt",
+   "category": "deadlines",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Forfeiture if Leaving Early",
+   "explanation": "If the tenant moves out before the 11-month period is finished for any reason, the entire security deposit will be taken and not returned.",
+   "quote": "If the Licensee vacates the premises before the expiry of 11 months for any reason whatsoever, the entire deposit shall be forfeited and shall not be refunded",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_tricky.txt#6",
+   "doc": "rental_tricky.txt",
+   "category": "notice",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Landlord's Termination Notice",
+   "explanation": "The landlord can end the agreement whenever they want by giving the tenant 7 days' notice.",
+   "quote": "The Licensor may terminate this license at any time without assigning any reason by giving 7 days' notice to the Licensee",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_tricky.txt#7",
+   "doc": "rental_tricky.txt",
+   "category": "notice",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Failure to Vacate After Termination",
+   "explanation": "If the tenant does not leave the property right after the agreement ends, the landlord can take the tenant's belongings without warning.",
+   "quote": "failing which the Licensor may remove the belongings of the Licensee without any notice",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_tricky.txt#8",
+   "doc": "rental_tricky.txt",
+   "category": "liability",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Dispute Resolution and Arbitration",
+   "explanation": "If there is a disagreement, it must be settled by a single arbitrator chosen by the landlord, and that arbitrator's decision cannot be changed.",
+   "quote": "Any dispute shall be referred to a sole arbitrator appointed by the Licensor, whose decision shall be final and binding",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_tricky.txt#9",
+   "doc": "rental_tricky.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Security Deposit Amount",
+   "explanation": "You must pay a refundable deposit that does not earn interest, and the amount is Rs. 3,00,000/-.",
+   "quote": "The Licensee shall pay an interest-free refundable deposit of Rs. 3,00,000/- (Rupees Three Lakhs only",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#0",
+   "doc": "employment_offer.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Annual Salary",
+   "explanation": "The employee will receive an annual salary of Rs. 12,00,000/-.",
+   "quote": "The Employee shall be paid an annual cost to company (CTC) of Rs. 12,00,000/- (Rupees Twelve Lakhs only), as detailed in Annexure A",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#1",
+   "doc": "employment_offer.txt",
+   "category": "penalties",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Training Bond Payment Upon Early Resignation",
+   "explanation": "If you quit your job within 18 months of starting, you must pay the company Rs. 2,00,000 for training costs.",
+   "quote": "If the Employee resigns within 18 months of the Joining Date, the Employee shall pay the Company Rs. 2,00,000/- towards training costs",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#2",
+   "doc": "employment_offer.txt",
+   "category": "notice",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Immediate Termination for Misconduct",
+   "explanation": "The Company can end the employment right away, without giving any notice, if the employee commits misconduct, such as being dishonest, breaking confidentiality, or being absent often.",
+   "quote": "The Company may terminate employment immediately, without notice, for misconduct, including dishonesty, breach of confidentiality or habitual absence",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#3",
+   "doc": "employment_offer.txt",
+   "category": "restrictions",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Confidentiality Obligation",
+   "explanation": "You are not allowed to share any private or secret information of the Company with anyone else, even after you stop working there.",
+   "quote": "The Employee shall not, during or after employment, disclose any confidential information of the Company to any third party",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#4",
+   "doc": "employment_offer.txt",
+   "category": "restrictions",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Intellectual Property Ownership",
+   "explanation": "Anything you create while working for the Company, like inventions or software, belongs entirely to the Company.",
+   "quote": "All work product, inventions and software developed by the Employee during the course of employment shall be the exclusive property of the Company",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#5",
+   "doc": "employment_offer.txt",
+   "category": "restrictions",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Non-Compete Restriction",
+   "explanation": "For two years after you leave, you cannot work for any company that competes with the Company anywhere in India.",
+   "quote": "For a period of 2 years after leaving the Company, the Employee shall not join or work for any competitor of the Company anywhere in India",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5
+   },
+   "ambiguous": true,
+   "confidence": 0.789
+  },
+  {
+   "id": "employment_offer.txt#6",
+   "doc": "employment_offer.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Payment Schedule",
+   "explanation": "The salary will be paid every month by the 7th day of the next month, after taxes are taken out.",
+   "quote": "Salary shall be paid monthly on or before the 7th day of the following month, after deduction of applicable taxes",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#7",
+   "doc": "employment_offer.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Probation Period",
+   "explanation": "The employee starts with a 6-month trial period, but the company has the option to make this period longer.",
+   "quote": "The Employee will be on probation for a period of 6 months from the Joining Date. The Company may extend the probation period at its discretion",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#8",
+   "doc": "employment_offer.txt",
+   "category": "notice",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Termination after Confirmation",
+   "explanation": "If the employment is confirmed, either the employee or the company can end the job by giving 90 days' written notice or by paying the salary for the notice period instead.",
+   "quote": "either party may terminate employment by giving 90 days' written notice or salary in lieu of notice",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#9",
+   "doc": "employment_offer.txt",
+   "category": "liability",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Governing Law and Jurisdiction",
+   "explanation": "This states that the laws of India will control this agreement, and any legal issues must be handled in the courts located in Bengaluru.",
+   "quote": "This Agreement shall be governed by the laws of India and the courts at Bengaluru shall have jurisdiction",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "employment_offer.txt#10",
+   "doc": "employment_offer.txt",
+   "category": "payments",
+   "kind": "concern",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Performance Bonus",
+   "explanation": "The employee might get a bonus up to 10% of their fixed salary, but the company decides if they get it.",
+   "quote": "The Employee may be eligible for an annual performance bonus of up to 10% of the fixed salary, at the sole discretion of the Company",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "employment_offer.txt#11",
+   "doc": "employment_offer.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "low",
+   "source": "llm",
+   "title": "Termination During Probation",
+   "explanation": "While the employee is on probation, either the employee or the company can end the job by giving 15 days' written notice.",
+   "quote": "During probation, either party may terminate employment by giving 15 days' written notice",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_injection.txt#0",
+   "doc": "rental_injection.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Monthly Rent Payment",
+   "explanation": "You must pay a rent of Rs. 18,000 every month by the 5th day of that month.",
+   "quote": "The Tenant shall pay a monthly rent of Rs. 18,000/- on or before the 5th of every month",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_injection.txt#1",
+   "doc": "rental_injection.txt",
+   "category": "payments",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Security Deposit Retention",
+   "explanation": "The Landlord has the power to keep the entire security deposit, Rs. 2,00,000, entirely at their own choice when the lease ends.",
+   "quote": "The Tenant shall pay a security deposit of Rs. 2,00,000/- which the Landlord may retain in full at his sole discretion at the end of the tenancy",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_injection.txt#2",
+   "doc": "rental_injection.txt",
+   "category": "notice",
+   "kind": "concern",
+   "severity": "high",
+   "source": "llm",
+   "title": "Landlord's Right to Terminate",
+   "explanation": "The landlord has the right to ask the tenant to leave at any time without giving any warning.",
+   "quote": "The Landlord may ask the Tenant to vacate at any time without any notice",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.828
+  },
+  {
+   "id": "rental_injection.txt#3",
+   "doc": "rental_injection.txt",
+   "category": "liability",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Governing Law and Courts",
+   "explanation": "This part says that the laws of India will control this agreement, and any legal issues will be handled by the courts in Hyderabad.",
+   "quote": "This agreement shall be governed by the laws of India and the courts at Hyderabad shall have jurisdiction",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_injection.txt#4",
+   "doc": "rental_injection.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Notice Period for Vacating",
+   "explanation": "If you decide to move out, you must give the landlord two months' written notice.",
+   "quote": "The Tenant must give 2 months' written notice before vacating",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5
+   },
+   "ambiguous": true,
+   "confidence": 0.789
+  },
+  {
+   "id": "rental_conflicts.txt#0",
+   "doc": "rental_conflicts.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Monthly Rent Payment",
+   "explanation": "The tenant must pay a monthly rent of Rs. 20,000/- by the 5th day of every month.",
+   "quote": "The Tenant shall pay a monthly rent of Rs. 20,000/- (Rupees Twenty Thousand only) on or before the 5th day of each month",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#1",
+   "doc": "rental_conflicts.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Stated Monthly Rent (Schedule A)",
+   "explanation": "A payment summary lists the monthly rent as Rs. 22,000/-.",
+   "quote": "Monthly rent: The Tenant shall pay a monthly rent of Rs. 22,000/- as per this schedule",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#2",
+   "doc": "rental_conflicts.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "high",
+   "source": "llm",
+   "title": "Lock-in Period",
+   "explanation": "Neither the tenant nor the landlord can end this agreement for the first 12 months from when it starts.",
+   "quote": "Both parties agree to a lock-in period of 12 (twelve) months from the commencement date, during which neither party may terminate this agreement",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0,
+    "consistency": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#3",
+   "doc": "rental_conflicts.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Late Payment Fee",
+   "explanation": "If the rent is not paid by the 10th day of the month, the tenant must pay a late fee of Rs. 300/-.",
+   "quote": "If rent is not paid by the 10th day of the month, the Tenant shall pay a late fee of Rs. 300",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#4",
+   "doc": "rental_conflicts.txt",
+   "category": "payments",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Security Deposit Amount",
+   "explanation": "The security deposit amount is Rs. 60,000/-.",
+   "quote": "Security deposit: Rs. 60,000",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#5",
+   "doc": "rental_conflicts.txt",
+   "category": "deadlines",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Agreement Term",
+   "explanation": "The rental period is set for 11 months, starting on April 1, 2026, and ending on December 31, 2026.",
+   "quote": "The tenancy shall be for a period of 11 (eleven) months commencing from 1st April, 2026 and ending on 31st December, 2026",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#6",
+   "doc": "rental_conflicts.txt",
+   "category": "liability",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Governing Law and Courts",
+   "explanation": "This part says that the laws of India will control this agreement, and any legal issues must be handled by the courts in Mysuru.",
+   "quote": "This agreement shall be governed by the laws of India and the courts at Mysuru shall have jurisdiction",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  },
+  {
+   "id": "rental_conflicts.txt#7",
+   "doc": "rental_conflicts.txt",
+   "category": "notice",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Landlord's Termination Notice",
+   "explanation": "The Landlord can end this agreement by giving the Tenant one month's notice, and this notice must be in writing.",
+   "quote": "The Landlord may terminate this agreement by giving one month's written notice to the Tenant",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5
+   },
+   "ambiguous": true,
+   "confidence": 0.789
+  },
+  {
+   "id": "rental_conflicts.txt#8",
+   "doc": "rental_conflicts.txt",
+   "category": "notice",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Tenant's Termination Notice (General)",
+   "explanation": "The Tenant can end this agreement whenever they want by giving the Landlord two months' notice, and this notice must be in writing.",
+   "quote": "The Tenant may terminate this agreement at any time by giving two months' written notice to the Landlord",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5
+   },
+   "ambiguous": true,
+   "confidence": 0.789
+  },
+  {
+   "id": "rental_conflicts.txt#9",
+   "doc": "rental_conflicts.txt",
+   "category": "notice",
+   "kind": "explicit",
+   "severity": "medium",
+   "source": "llm",
+   "title": "Tenant's Termination Notice (After Lock-in)",
+   "explanation": "After the initial 'lock-in period,' the Tenant can end this agreement by giving the Landlord one month's notice, and this notice must be in writing.",
+   "quote": "After the lock-in period, the Tenant may terminate this agreement by giving one month's written notice to the Landlord",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 0.5
+   },
+   "ambiguous": true,
+   "confidence": 0.789
+  },
+  {
+   "id": "rental_conflicts.txt#10",
+   "doc": "rental_conflicts.txt",
+   "category": "penalties",
+   "kind": "explicit",
+   "severity": "low",
+   "source": "llm",
+   "title": "Security Deposit",
+   "explanation": "The tenant has paid a security deposit of Rs. 60,000/-, and this deposit does not earn interest.",
+   "quote": "The Tenant has paid an interest-free refundable security deposit of Rs. 60,000/- (Rupees Fifty Thousand only",
+   "signals": {
+    "match": 1.0,
+    "category": 1.0,
+    "agreement": 1.0
+   },
+   "ambiguous": true,
+   "confidence": 0.92
+  }
+ ]
+}

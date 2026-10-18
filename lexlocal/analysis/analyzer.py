@@ -9,7 +9,7 @@ import time
 from typing import Callable, Optional
 
 from lexlocal import config, knowledge
-from lexlocal.analysis import consistency, guardrails
+from lexlocal.analysis import confidence, consistency, guardrails
 from lexlocal.analysis.verifier import Verifier, check_numbers
 from lexlocal.extract import categories as cats
 from lexlocal.extract.rules import extract_facts
@@ -108,6 +108,9 @@ def _overlaps(a: Finding, b: Finding) -> bool:
 
 class Analyzer:
     def __init__(self, llm: Optional[OllamaClient] = None):
+        self._facts: list = []
+        self._chunk_cats: dict[str, list[str]] = {}
+        self._page_signals: dict[int, dict] = {}  # e.g. {"ocr": 0.83} for scanned pages
         self.llm = llm or OllamaClient()
 
     # ----------------------------------------------------------------
@@ -146,13 +149,16 @@ class Analyzer:
                 sev = Severity.medium
             note = f"Contains one-sided wording (\"{one_sided[0]}\") — worth asking a lawyer about."
             ambiguity = f"{ambiguity} {note}".strip() if ambiguity else note
-        conf = (v.score / 100) * {Kind.explicit: 0.95, Kind.interpretation: 0.75, Kind.concern: 0.8}[kind_e]
-        if ambiguity:
-            conf *= 0.9
-        return Finding(category=category, title=title[:120], plain_explanation=explanation, quote=v.quote,
-                       chunk_id=v.chunk_id, page=v.page, kind=kind_e, severity=sev, confidence=round(conf, 2),
-                       verified=True, needs_lawyer=needs_lawyer or kind_e == Kind.concern or sev == Severity.high,
-                       ambiguity_note=ambiguity or None, match_score=v.score, source=source)
+        f = Finding(category=category, title=title[:120], plain_explanation=explanation, quote=v.quote,
+                    chunk_id=v.chunk_id, page=v.page, kind=kind_e, severity=sev,
+                    verified=True, needs_lawyer=needs_lawyer or kind_e == Kind.concern or sev == Severity.high,
+                    ambiguity_note=ambiguity or None, match_score=v.score, source=source)
+        f.signals = confidence.signals_for(f, v.start, v.end, self._facts, self._chunk_cats.get(v.chunk_id, []))
+        if source == "rules":
+            f.signals["agreement"] = 1.0  # the value is the rule fact itself
+        f.signals.update(self._page_signals.get(v.page, {}))
+        f.confidence = confidence.combine(f.signals, kind_e, bool(ambiguity))
+        return f
 
     def _rule_findings(self, report: Report, verifier: Verifier, facts) -> list[Finding]:
         out = []
@@ -195,6 +201,8 @@ class Analyzer:
         facts = extract_facts(doc)
         report.facts = facts
         report.key_terms = build_key_terms(facts, chunks, doc, doc_type)
+        self._facts, self._chunk_cats = facts, {c.id: c.categories for c in chunks}
+        self._page_signals = {p: {"ocr": c} for p, c in (getattr(doc, "ocr_confidence", None) or {}).items()}
         fact_values = [f.value for f in facts]
         verifier = Verifier(doc, chunks)
         report.injection_flags = guardrails.scan_injection(doc)
@@ -244,6 +252,7 @@ class Analyzer:
 
         # ---- category findings
         findings: list[Finding] = []
+        cat_prompts: dict[str, str] = {}
         t = time.perf_counter()
         if llm_ok:
             for i, cat in enumerate(ANALYSIS_CATEGORIES):
@@ -252,10 +261,9 @@ class Analyzer:
                 if not sel:
                     continue
                 sel_llm = [llm_by_id[c.id] for c in sel]
+                cat_prompts[cat] = prompts.findings_prompt(cat, doc_type, sel_llm, config.CHUNK_CHAR_BUDGET)
                 try:
-                    out = self.llm.generate_json(prompts.BASE_SYSTEM,
-                                                 prompts.findings_prompt(cat, doc_type, sel_llm, config.CHUNK_CHAR_BUDGET),
-                                                 prompts.FindingsOut)
+                    out = self.llm.generate_json(prompts.BASE_SYSTEM, cat_prompts[cat], prompts.FindingsOut)
                 except LLMError as e:
                     report.warnings.append(f"{cats.label(cat)}: model call failed ({e})")
                     continue
@@ -273,6 +281,26 @@ class Analyzer:
                             f.kind == Kind.concern and dup.kind != Kind.concern):
                         findings[findings.index(dup)] = f  # same clause: keep the stronger finding once
         stage("findings", t)
+
+        # ---- self-consistency: resample categories with high-severity findings once at a higher temperature
+        if llm_ok and config.SELF_CONSISTENCY_CALLS > 0:
+            t = time.perf_counter()
+            high_cats = list(dict.fromkeys(f.category for f in findings
+                                           if f.severity == Severity.high and f.source == "llm" and f.category in cat_prompts))
+            for cat in high_cats[:config.SELF_CONSISTENCY_CALLS]:
+                progress(f"Double-checking {cats.label(cat).lower()} (Gemma, second sample)", 0.91)
+                try:
+                    out = self.llm.generate_json(prompts.BASE_SYSTEM, cat_prompts[cat], prompts.FindingsOut,
+                                                 temperature=0.7, seed=11)
+                except LLMError:
+                    continue
+                spans = [(v.start, v.end) for v in (verifier.verify(lf.quote, lf.clause_id) for lf in out.findings) if v.ok]
+                for f in findings:
+                    if f.category == cat and f.severity == Severity.high and f.source == "llm":
+                        fv = verifier.verify(f.quote, f.chunk_id)
+                        f.signals["consistency"] = 1.0 if any(s < fv.end and fv.start < e for s, e in spans) else 0.0
+                        f.confidence = confidence.combine(f.signals, f.kind, bool(f.ambiguity_note))
+            stage("self-consistency", t)
 
         # ---- rule-based findings fill gaps (and are the only findings if LLM is down)
         for rf in self._rule_findings(report, verifier, facts):

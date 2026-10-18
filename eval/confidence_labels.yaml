@@ -1,0 +1,54 @@
+# Hand labels for scripts/calibrate.py. true = the explanation is accurate, not misleading and sensibly
+# categorised when read against the verified quote. Labelled by the LexLocal team on 2026-10-18 (gemma4:e4b run).
+labels:
+  "rental_clean.txt#0": true
+  "rental_clean.txt#1": true
+  "rental_clean.txt#2": true
+  "rental_clean.txt#3": true
+  "rental_clean.txt#4": true
+  "rental_clean.txt#5": true
+  "rental_clean.txt#6": true
+  "rental_clean.txt#7": true
+  "rental_clean.txt#8": true
+  "rental_clean.txt#9": true
+  "rental_clean.txt#10": true
+  "rental_clean.txt#11": true
+  "rental_clean.txt#12": true
+  "rental_tricky.txt#0": false   # says 'before the 1st'; the clause says 'on or before'
+  "rental_tricky.txt#1": true
+  "rental_tricky.txt#2": true
+  "rental_tricky.txt#3": true
+  "rental_tricky.txt#4": true
+  "rental_tricky.txt#5": true
+  "rental_tricky.txt#6": true
+  "rental_tricky.txt#7": false   # says the landlord can 'take' belongings; the clause says 'remove'
+  "rental_tricky.txt#8": true
+  "rental_tricky.txt#9": true
+  "employment_offer.txt#0": false   # calls the CTC an 'annual salary', which is misleading
+  "employment_offer.txt#1": true
+  "employment_offer.txt#2": true
+  "employment_offer.txt#3": true
+  "employment_offer.txt#4": true
+  "employment_offer.txt#5": true
+  "employment_offer.txt#6": true
+  "employment_offer.txt#7": true
+  "employment_offer.txt#8": true
+  "employment_offer.txt#9": true
+  "employment_offer.txt#10": true
+  "employment_offer.txt#11": true
+  "rental_injection.txt#0": true
+  "rental_injection.txt#1": true
+  "rental_injection.txt#2": true
+  "rental_injection.txt#3": true
+  "rental_injection.txt#4": true
+  "rental_conflicts.txt#0": true
+  "rental_conflicts.txt#1": true
+  "rental_conflicts.txt#2": true
+  "rental_conflicts.txt#3": true
+  "rental_conflicts.txt#4": true
+  "rental_conflicts.txt#5": true
+  "rental_conflicts.txt#6": true
+  "rental_conflicts.txt#7": true
+  "rental_conflicts.txt#8": true
+  "rental_conflicts.txt#9": true
+  "rental_conflicts.txt#10": false   # security deposit filed under penalties

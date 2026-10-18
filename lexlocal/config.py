@@ -38,6 +38,8 @@ LLM_MAX_TOKENS = int(os.environ.get("LEXLOCAL_MAX_TOKENS", "700"))
 
 # --- Embeddings ----------------------------------------------------------
 EMBED_MODEL_DIR = Path(os.environ.get("LEXLOCAL_EMBED_DIR", ROOT / "models" / "bge-small-en-v1.5"))
+TESSDATA_DIR = Path(os.environ.get("LEXLOCAL_TESSDATA", ROOT / "models" / "tessdata"))  # eng + hin for local OCR
+OCR_LOW_CONFIDENCE = 0.70  # pages below this get a warning and lower finding confidence
 
 # --- Ingestion -----------------------------------------------------------
 MAX_FILE_MB = 25
@@ -62,3 +64,8 @@ KNOWLEDGE_DIR = ROOT / "knowledge"
 SAMPLES_DIR = ROOT / "samples"
 EVAL_DIR = ROOT / "eval"
 DOCS_DIR = ROOT / "docs"
+
+# --- Confidence (tuned by scripts/calibrate.py on eval/confidence_labels.yaml) ---------------
+CONF_HIGH = float(os.environ.get("LEXLOCAL_CONF_HIGH", "0.85"))
+CONF_MEDIUM = float(os.environ.get("LEXLOCAL_CONF_MEDIUM", "0.65"))
+SELF_CONSISTENCY_CALLS = int(os.environ.get("LEXLOCAL_SELF_CONSISTENCY", "2"))  # extra samples for high-severity categories

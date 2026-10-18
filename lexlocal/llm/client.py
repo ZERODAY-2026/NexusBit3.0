@@ -55,7 +55,8 @@ class OllamaClient:
             return {"ok": False, "models": [], "model_available": False, "error": type(e).__name__}
 
     # -- raw call ---------------------------------------------------------
-    def _chat(self, messages: list[dict], schema: Optional[dict], max_tokens: int) -> tuple[str, dict]:
+    def _chat(self, messages: list[dict], schema: Optional[dict], max_tokens: int,
+              temperature: Optional[float] = None, seed: int = 7) -> tuple[str, dict]:
         body = {
             "model": self.model,
             "messages": messages,
@@ -63,10 +64,10 @@ class OllamaClient:
             "keep_alive": "30m",
             "think": False,
             "options": {
-                "temperature": config.LLM_TEMPERATURE,
+                "temperature": config.LLM_TEMPERATURE if temperature is None else temperature,
                 "num_ctx": config.LLM_NUM_CTX,
                 "num_predict": max_tokens,
-                "seed": 7,
+                "seed": seed,
             },
         }
         if schema is not None:
@@ -106,14 +107,15 @@ class OllamaClient:
         content, _ = self._chat([{"role": "system", "content": system}, {"role": "user", "content": user}], None, max_tokens)
         return content.strip()
 
-    def generate_json(self, system: str, user: str, model_cls: Type[BaseModel], max_tokens: Optional[int] = None) -> BaseModel:
+    def generate_json(self, system: str, user: str, model_cls: Type[BaseModel], max_tokens: Optional[int] = None,
+                      temperature: Optional[float] = None, seed: int = 7) -> BaseModel:
         """Return a validated instance of model_cls. One retry with a repair hint; else LLMError."""
         schema = model_cls.model_json_schema()
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         last_err = ""
         budget = max_tokens or config.LLM_MAX_TOKENS
         for attempt in range(2):
-            content, meta = self._chat(messages, schema, budget)
+            content, meta = self._chat(messages, schema, budget, temperature, seed)
             if meta.get("done_reason") == "length":
                 # Truncated at num_predict: a repair prompt cannot fix that, a larger budget can.
                 last_err = "output truncated"

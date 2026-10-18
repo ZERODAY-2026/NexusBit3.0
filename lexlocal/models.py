@@ -36,6 +36,8 @@ class Document(BaseModel):
     pages: list[Page]
     text: str
     warnings: list[str] = Field(default_factory=list)
+    adversarial: list[AdversarialFlag] = Field(default_factory=list)
+    ocr_confidence: dict[int, float] = Field(default_factory=dict)  # page -> 0..1, scanned pages only
 
     def page_for_offset(self, offset: int) -> int:
         for p in self.pages:
@@ -69,6 +71,7 @@ class Finding(BaseModel):
     ambiguity_note: Optional[str] = None
     match_score: float = 0.0
     source: str = "llm"  # llm | rules
+    signals: dict[str, float] = Field(default_factory=dict)  # confidence inputs (analysis/confidence.py)
 
 
 class Fact(BaseModel):
@@ -117,6 +120,56 @@ class Unusual(BaseModel):
     similarity: Optional[float] = None
 
 
+class AdversarialFlag(BaseModel):
+    """Content a reader cannot see but a parser would read (hidden text, invisible chars, look-alike letters)."""
+    kind: str  # hidden text | invisible characters | look-alike letters
+    page: int
+    text: str = ""
+    detail: str = ""
+
+
+class JurisdictionInfo(BaseModel):
+    state: str = ""
+    basis: str = ""      # governing law | courts | place of signing
+    value: str = ""
+    quote: str = ""
+    page: int = 0
+    country_law: str = ""
+
+
+class JurisdictionNote(BaseModel):
+    topic: str
+    note: str
+    quote: str
+    page: int
+
+
+class ClauseChange(BaseModel):
+    """One aligned clause pair in a two-version comparison."""
+    status: str  # unchanged | modified | added | removed
+    old_id: str = ""
+    new_id: str = ""
+    old_text: str = ""
+    new_text: str = ""
+    old_page: int = 0
+    new_page: int = 0
+    diff_html: str = ""
+    summary: str = ""
+    material: list[str] = Field(default_factory=list)
+    explanation: str = ""   # model text, only if both quotes verified
+    quote_old: str = ""
+    quote_new: str = ""
+    similarity: float = 0.0
+
+
+class GlossaryEntry(BaseModel):
+    term: str
+    definition: str
+    source: str  # glossary | model
+    example: str = ""  # the document sentence where the term appears
+    page: int = 0
+
+
 class VagueTerm(BaseModel):
     term: str
     quote: str
@@ -144,6 +197,9 @@ class Report(BaseModel):
     key_terms: list[KeyTerm] = Field(default_factory=list)
     conflicts: list[Conflict] = Field(default_factory=list)
     unusual: list[Unusual] = Field(default_factory=list)
+    jurisdiction: JurisdictionInfo = Field(default_factory=JurisdictionInfo)
+    jurisdiction_items: list[JurisdictionNote] = Field(default_factory=list)
+    adversarial: list[AdversarialFlag] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     missing_clauses: list[str] = Field(default_factory=list)
     vague_terms: list[VagueTerm] = Field(default_factory=list)

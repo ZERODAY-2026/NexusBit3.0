@@ -12,7 +12,7 @@ def test_truncated_output_is_retried_with_a_larger_budget(monkeypatch):
     replies = iter([('{"summary": "cut o', {"done_reason": "length"}),
                     ('{"summary": "complete"}', {"done_reason": "stop"})])
 
-    def fake_chat(self, messages, schema, max_tokens):
+    def fake_chat(self, messages, schema, max_tokens, temperature=None, seed=7):
         budgets.append(max_tokens)
         return next(replies)
 

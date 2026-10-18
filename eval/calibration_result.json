@@ -1,0 +1,75 @@
+{
+ "model": "gemma4:e4b",
+ "weights": {
+  "match": 0.3,
+  "agreement": 0.2,
+  "category": 0.2,
+  "consistency": 0.3
+ },
+ "priors": {
+  "explicit": 1.0,
+  "interpretation": 0.85,
+  "concern": 0.9
+ },
+ "high": 0.85,
+ "medium": 0.65,
+ "table": [
+  [
+   "High",
+   40,
+   37
+  ],
+  [
+   "Medium",
+   11,
+   10
+  ],
+  [
+   "Low",
+   0,
+   0
+  ]
+ ],
+ "n": 51,
+ "correct": 47,
+ "brier_default": 0.0741,
+ "brier_best_grid": 0.0724,
+ "score_min": 0.789,
+ "score_max": 1.0,
+ "signal_means_wrong_vs_right": {
+  "agreement": [
+   "1.00 (n=3)",
+   "0.95 (n=30)"
+  ],
+  "category": [
+   "1.00 (n=4)",
+   "1.00 (n=47)"
+  ],
+  "consistency": [
+   "1.00 (n=2)",
+   "1.00 (n=11)"
+  ],
+  "match": [
+   "1.00 (n=4)",
+   "1.00 (n=47)"
+  ]
+ },
+ "errors": [
+  {
+   "id": "rental_tricky.txt#0",
+   "why": "says 'before the 1st'; the clause says 'on or before'"
+  },
+  {
+   "id": "rental_tricky.txt#7",
+   "why": "says the landlord can 'take' belongings; the clause says 'remove'"
+  },
+  {
+   "id": "employment_offer.txt#0",
+   "why": "calls the CTC an 'annual salary', which is misleading"
+  },
+  {
+   "id": "rental_conflicts.txt#10",
+   "why": "security deposit filed under penalties"
+  }
+ ]
+}

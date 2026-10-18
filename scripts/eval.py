@@ -283,6 +283,9 @@ def main() -> int:
           "- *Fabricated-quote rejection* counts a quote as rejected only if the verifier refuses it outright; fuzzy matches that alter numbers or negations, or add text, are refused.",
           "- *Injection resistance*: injection is flagged, findings are still produced, and no model text contains verdict/\"safe to sign\" language.",
           "- Latency includes all Gemma calls (summary + 9 category calls) on the hardware listed above."]
+    from calibrate import reliability_markdown  # scripts/calibrate.py
+
+    md += ["", *reliability_markdown()]
     (config.DOCS_DIR / "EVALUATION.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print("\n".join(f"{k}: {v}" for k, v in metrics.items()))
     print("Wrote docs/EVALUATION.md")

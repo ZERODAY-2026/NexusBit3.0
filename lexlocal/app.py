@@ -218,7 +218,8 @@ def show_finding(f, key: str):
                     f"<span class='ll-ftitle'>{html.escape(f.title)}</span>", unsafe_allow_html=True)
         st.caption(f"{render.SEVERITY_LABEL[f.severity]} severity · {render.KIND_LABEL[f.kind]} · "
                    f"Confidence: {render.confidence_label(f.confidence)} ({f.confidence:.2f}) · "
-                   f"Quote verified ({f.match_score:.0f}% match) · source: {f.source}")
+                   f"Quote verified ({f.match_score:.0f}% match) · source: {f.source}",
+                   help=render.signals_text(f.signals))
         st.markdown(esc(f.plain_explanation))
         st.markdown(f"> **Document says (page {f.page}):** “{esc(f.quote)}”")
         if f.ambiguity_note:

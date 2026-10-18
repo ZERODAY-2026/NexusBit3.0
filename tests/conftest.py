@@ -60,7 +60,7 @@ class FakeLLM:
     def health(self):
         return {"ok": self.up, "models": [self.model], "model_available": self.up}
 
-    def generate_json(self, system, user, model_cls, max_tokens=None):
+    def generate_json(self, system, user, model_cls, max_tokens=None, temperature=None, seed=7):
         from lexlocal.llm.client import LLMError
 
         self.calls.append((model_cls.__name__, user))

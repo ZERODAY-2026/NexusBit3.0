@@ -14,7 +14,9 @@ SEVERITY_LABEL = {Severity.high: "HIGH", Severity.medium: "MEDIUM", Severity.low
 
 
 def confidence_label(c: float) -> str:
-    return "High" if c >= 0.85 else "Medium" if c >= 0.65 else "Low"
+    from lexlocal.analysis.confidence import label
+
+    return label(c)
 
 
 FACT_LABELS = {"party": "Parties", "role": "Roles", "date": "Dates", "amount": "Amounts",
@@ -62,3 +64,14 @@ def report_markdown(report: Report) -> str:
         parts += ["## Not found in the document", ""] + [f"- The document does not appear to mention **{m}**." for m in report.missing_clauses]
     parts += ["", f"_{d['escalation']}_"]
     return "\n".join(parts)
+
+
+_SIGNAL_NAMES = {"match": "quote match", "agreement": "agrees with rule-extracted facts", "category": "clause topic fits",
+                 "consistency": "found again in a second sample", "ocr": "OCR confidence of the page"}
+
+
+def signals_text(signals: dict) -> str:
+    """Plain-text breakdown of what the confidence is based on."""
+    if not signals:
+        return "No confidence signals recorded."
+    return "Confidence is based on: " + "; ".join(f"{_SIGNAL_NAMES.get(k, k)} {v:.2f}" for k, v in signals.items())
