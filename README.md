@@ -21,7 +21,7 @@ before they sign, and who can't, or shouldn't, upload it to a cloud AI.
 
 - **Documents:** Indian rental, lease and leave-and-license agreements, and employment agreements or offer letters.
 - **Language:** English.
-- **Formats:** text-based PDF, DOCX, TXT (≤ 25 MB, ≤ 200 pages). Scanned PDFs are detected and declined ("OCR coming in advanced mode").
+- **Formats:** PDF (text or scanned), DOCX, TXT (≤ 25 MB, ≤ 200 pages). Scanned pages are read with local Tesseract OCR (English + Hindi), with a confidence score for each page.
 - **Out of scope:** legal advice, legality or enforceability verdicts, other contract types (they are analysed with a warning).
 
 ## Features
@@ -121,14 +121,14 @@ Knowledge files (checklists, vague terms, disclaimers, …) are in [knowledge/](
 | "model not pulled" | Run `ollama pull gemma4:e4b`, or pick an available model in the sidebar |
 | Very slow analysis | Switch to `gemma4:e2b` and close GPU-heavy apps. The first call includes ~20 s of model load |
 | "Embeddings: BM25 only" | Run `python scripts/download_models.py` once while online |
-| Scanned PDF rejected | Phase 1 has no OCR. Export the document as a text PDF or DOCX |
+| Scanned PDF rejected | Install Tesseract (`winget install UB-Mannheim.TesseractOCR`, `apt install tesseract-ocr tesseract-ocr-hin`, or `brew install tesseract tesseract-lang`) and run the setup script so `models/tessdata` has eng + hin |
 | `streamlit` launcher fails after moving the folder | Use `python -m streamlit run app.py`. Console launchers in a venv hard-code the venv's original path |
 | `ollama` command not found on Windows | The API works without it; the setup script pulls models over HTTP |
 
 ## Limitations
 
 - English Indian rental and employment agreements only. Other documents get a warning, and results may be weak.
-- No OCR yet, so scanned PDFs are declined.
+- OCR quality depends on the scan. Low-confidence pages are flagged and their findings get lower confidence.
 - Checklist-based "missing clause" detection can miss clauses that use unusual wording, and it says "does not *appear* to mention".
 - Recall is not perfect: the model may miss a clause. Absence of a finding is not a guarantee.
 - Confidence is a simple heuristic in Phase 1 (quote match × label type), not calibrated.

@@ -67,7 +67,7 @@ def _assemble(name: str, kind: str, page_texts: list[str], warnings: list[str],
     return Document(name=name, kind=kind, pages=pages, text=text, warnings=warnings, adversarial=flags)
 
 
-def _parse_pdf(name: str, data: bytes) -> Document:
+def _parse_pdf(name: str, data: bytes, vault=None) -> Document:
     import pymupdf as fitz
 
     try:
@@ -83,7 +83,7 @@ def _parse_pdf(name: str, data: bytes) -> Document:
             raise IngestError("empty", "This PDF has no pages.")
         if doc.page_count > config.MAX_PAGES:
             raise IngestError("too_many_pages", f"This PDF has {doc.page_count} pages; the limit is {config.MAX_PAGES}.")
-        page_texts, image_pages, flags = [], 0, []
+        page_texts, image_pages, flags = [], [], []
         for page in doc:
             t = page.get_text("text", sort=True) or ""
             page_flags, hidden = adversarial.scan_pdf_page(page)
@@ -91,7 +91,8 @@ def _parse_pdf(name: str, data: bytes) -> Document:
             t = adversarial.remove_hidden(t, hidden)
             page_texts.append(t)
             if len(t.strip()) < config.MIN_TEXT_CHARS_PER_PAGE and page.get_images(full=False):
-                image_pages += 1
+                image_pages.append(page.number)
+        ocr_conf, ocr_note = _ocr_pages(doc, image_pages, page_texts, vault)
     except IngestError:
         raise
     except Exception:
@@ -103,12 +104,54 @@ def _parse_pdf(name: str, data: bytes) -> Document:
     low_text_pages = sum(1 for t in page_texts if len(t.strip()) < config.MIN_TEXT_CHARS_PER_PAGE)
     if total < config.MIN_TEXT_CHARS_PER_PAGE:
         if image_pages:
-            raise IngestError("scanned", "This looks like a scanned PDF (images, no text layer). OCR is coming in advanced mode; please upload a text-based PDF, DOCX or TXT for now.")
+            raise IngestError("scanned", "This looks like a scanned PDF (page images, no text layer). " + ocr_note)
         raise IngestError("empty", "No readable text was found in this PDF.")
     warnings = []
+    if ocr_conf:
+        low = sorted(p for p, c in ocr_conf.items() if c < config.OCR_LOW_CONFIDENCE)
+        mean = sum(ocr_conf.values()) / len(ocr_conf)
+        warnings.append(f"{len(ocr_conf)} scanned page(s) were read with local OCR (average confidence {mean:.0%}). "
+                        "Quotes from these pages come from OCR text, so check them against the page image.")
+        if low:
+            warnings.append(f"OCR confidence is low on page(s) {', '.join(map(str, low))}. Findings from those pages "
+                            "have lower confidence; check them against the original.")
+    elif ocr_note and image_pages:
+        warnings.append(ocr_note)
     if low_text_pages and low_text_pages >= max(1, len(page_texts) // 2):
-        warnings.append(f"{low_text_pages} of {len(page_texts)} pages have little or no text (possibly scanned). Those pages were not analysed.")
-    return _assemble(name, "pdf", page_texts, warnings, flags)
+        warnings.append(f"{low_text_pages} of {len(page_texts)} pages have little or no text. Those pages were not analysed.")
+    d = _assemble(name, "pdf", page_texts, warnings, flags)
+    d.ocr_confidence = ocr_conf
+    return d
+
+
+def _ocr_pages(doc, page_numbers: list[int], page_texts: list[str], vault) -> tuple[dict[int, float], str]:
+    """OCR image-only pages in place. Returns ({1-based page: confidence}, note for the user)."""
+    if not page_numbers:
+        return {}, ""
+    from lexlocal.ingest import ocr
+
+    if not config.OCR_ENABLED:
+        return {}, "Local OCR is turned off (LEXLOCAL_OCR=off), so scanned pages were not read."
+    ok, msg = ocr.available()
+    if not ok:
+        return {}, msg
+    own_vault = vault is None
+    if own_vault:
+        from lexlocal.privacy.vault import Vault
+
+        vault = Vault()
+    conf = {}
+    try:
+        for n in page_numbers[:config.MAX_OCR_PAGES]:
+            r = ocr.ocr_page(doc[n], vault)
+            page_texts[n] = r.text
+            conf[n + 1] = r.confidence
+    finally:
+        if own_vault:
+            vault.wipe()
+    skipped = len(page_numbers) - len(conf)
+    note = f" {skipped} further scanned page(s) were not read (limit {config.MAX_OCR_PAGES})." if skipped else ""
+    return conf, note.strip()
 
 
 def _parse_docx(name: str, data: bytes) -> Document:
@@ -168,7 +211,7 @@ def looks_like_contract(text: str) -> tuple[bool, int]:
     return hits >= 5, hits
 
 
-def parse_bytes(name: str, data: bytes) -> Document:
+def parse_bytes(name: str, data: bytes, vault=None) -> Document:
     if data is None or len(data) == 0:
         raise IngestError("empty", "The uploaded file is empty (0 bytes).")
     if len(data) > config.MAX_FILE_MB * 1024 * 1024:
@@ -177,7 +220,7 @@ def parse_bytes(name: str, data: bytes) -> Document:
     if data[:5] == b"%PDF-" or ext == "pdf":
         if data[:5] != b"%PDF-":
             raise IngestError("corrupt", "This file has a .pdf extension but is not a valid PDF.")
-        doc = _parse_pdf(name, data)
+        doc = _parse_pdf(name, data, vault)
     elif ext == "docx" or data[:2] == b"PK":
         doc = _parse_docx(name, data)
     elif ext in ("txt", "md", "text", ""):

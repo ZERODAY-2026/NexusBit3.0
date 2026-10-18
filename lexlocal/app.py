@@ -120,6 +120,13 @@ st.markdown(
 
 
 @st.cache_resource(show_spinner=False)
+def _ocr_status():
+    from lexlocal.ingest import ocr
+
+    return ocr.available()
+
+
+@st.cache_resource(show_spinner=False)
 def _warm_embedder():
     return get_embedder() is not None
 
@@ -145,7 +152,9 @@ with st.sidebar:
                      True if netguard.is_active() else None)
         + theme.chip(f"Blocked outbound attempts: <b>{len(blocked)}</b>", not blocked)
         + theme.chip("Embeddings: local bge-small" if emb_ok else f"Embeddings: BM25 only ({html.escape(embedder_status())})",
-                     True if emb_ok else None),
+                     True if emb_ok else None)
+        + theme.chip(f"OCR: {html.escape(_ocr_status()[1])}" if _ocr_status()[0] else "OCR: not installed (scanned PDFs declined)",
+                     True if _ocr_status()[0] else None),
         unsafe_allow_html=True)
     if blocked:
         with st.expander("Blocked attempts"):
@@ -178,7 +187,8 @@ if up is not None:
         clear_doc()
         st.session_state.doc_hash = h
         try:
-            doc = parse_bytes(up.name, data)
+            with st.spinner("Reading the document locally (scanned pages are read with local OCR, about 5 s per page)..."):
+                doc = parse_bytes(up.name, data, vault=session_vault())
             st.session_state.doc = doc
             if doc.kind == "pdf":  # kept in memory only, for the highlighted page view
                 st.session_state.doc_bytes = data
@@ -251,7 +261,8 @@ def show_finding(f, key: str):
                     f"<span class='ll-ftitle'>{html.escape(f.title)}</span>", unsafe_allow_html=True)
         st.caption(f"{render.SEVERITY_LABEL[f.severity]} severity · {render.KIND_LABEL[f.kind]} · "
                    f"Confidence: {render.confidence_label(f.confidence)} ({f.confidence:.2f}) · "
-                   f"Quote verified ({f.match_score:.0f}% match) · source: {f.source}",
+                   f"Quote verified ({f.match_score:.0f}% match) · source: {f.source}"
+                   + (f" · OCR page confidence {f.signals['ocr']:.0%}" if "ocr" in f.signals else ""),
                    help=render.signals_text(f.signals))
         st.markdown(esc(f.plain_explanation))
         st.markdown(f"> **Document says (page {f.page}):** “{esc(f.quote)}”")

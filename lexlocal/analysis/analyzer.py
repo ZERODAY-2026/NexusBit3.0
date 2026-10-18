@@ -106,6 +106,8 @@ class Analyzer:
                 ambiguity: str = "", source: str = "llm") -> Optional[Finding]:
         explanation, n_verdict = guardrails.scrub_verdicts(explanation)
         ambiguity, _ = guardrails.scrub_verdicts(ambiguity or "")
+        if ambiguity.strip().strip(".").lower() in ("none", "null", "n/a", "na", "no", "-", "nil", "not applicable"):
+            ambiguity = ""  # models sometimes fill the optional field with a placeholder
         title, n_title = guardrails.scrub_verdicts(title)
         if n_verdict or n_title:
             report.rejected.append({"reason": "verdict_language_removed", "category": category})

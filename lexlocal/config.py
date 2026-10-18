@@ -40,6 +40,8 @@ LLM_MAX_TOKENS = int(os.environ.get("LEXLOCAL_MAX_TOKENS", "700"))
 EMBED_MODEL_DIR = Path(os.environ.get("LEXLOCAL_EMBED_DIR", ROOT / "models" / "bge-small-en-v1.5"))
 TESSDATA_DIR = Path(os.environ.get("LEXLOCAL_TESSDATA", ROOT / "models" / "tessdata"))  # eng + hin for local OCR
 OCR_LOW_CONFIDENCE = 0.70  # pages below this get a warning and lower finding confidence
+OCR_ENABLED = os.environ.get("LEXLOCAL_OCR", "on") != "off"
+MAX_OCR_PAGES = 30
 
 # --- Ingestion -----------------------------------------------------------
 MAX_FILE_MB = 25

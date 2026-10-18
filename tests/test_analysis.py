@@ -129,3 +129,15 @@ def test_qa_verdict_escalates(clean_doc, fake_llm_cls):
 def test_qa_out_of_scope(clean_doc, fake_llm_cls):
     a = _qa(clean_doc, fake_llm_cls()).ask("What is the capital of France?")
     assert a.qtype == "out_of_scope" and "Paris" not in a.answer
+
+
+def test_placeholder_ambiguity_is_dropped(clean_doc, fake_llm_cls):
+    def fn(user):
+        if "**penalties**" not in user:
+            return {"findings": []}
+        return {"findings": [{"title": "Late fee", "explanation": "If rent is late you pay Rs. 500 for every week of delay.",
+                              "quote": REAL, "clause_id": _clause_of(user, "late fee"), "kind": "explicit",
+                              "severity": "medium", "needs_lawyer": False, "ambiguity": "None"}]}
+    report, _ = Analyzer(fake_llm_cls({"FindingsOut": fn})).analyze(clean_doc, "auto")
+    late = next(f for f in report.findings if f.title == "Late fee")
+    assert late.ambiguity_note is None

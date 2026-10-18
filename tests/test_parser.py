@@ -67,7 +67,10 @@ def test_encrypted_pdf():
     assert e.value.code == "encrypted"
 
 
-def test_scanned_pdf():
+def test_scanned_pdf_without_ocr(monkeypatch):
+    from lexlocal import config
+
+    monkeypatch.setattr(config, "OCR_ENABLED", False)
     src = fitz.open(stream=_pdf(TEXT, 1), filetype="pdf")
     pix = src[0].get_pixmap(dpi=60)
     out = fitz.open()
