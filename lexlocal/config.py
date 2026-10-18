@@ -51,6 +51,7 @@ MIN_QUOTE_CHARS = 12
 # --- Analysis ------------------------------------------------------------
 MAX_CHUNKS_PER_CATEGORY = 3
 CHUNK_CHAR_BUDGET = 3500  # ~1k tokens of document text per LLM call
+PAIRWISE_CHECKS = int(os.environ.get("LEXLOCAL_PAIRWISE", "2"))  # Gemma clause-pair contradiction checks (0 = off)
 
 # --- Privacy -------------------------------------------------------------
 NETGUARD_MODE = os.environ.get("LEXLOCAL_NETGUARD", "strict")  # strict | off

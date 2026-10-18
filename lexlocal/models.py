@@ -91,6 +91,32 @@ class KeyTerm(BaseModel):
     chunk_id: str = ""
 
 
+class Conflict(BaseModel):
+    """Two places in the document that seem to disagree (or one self-contradictory span)."""
+    title: str
+    explanation: str
+    quote_a: str
+    page_a: int
+    chunk_a: str = ""
+    quote_b: str = ""
+    page_b: int = 0
+    chunk_b: str = ""
+    source: str = "rules"  # rules | llm
+
+
+class Unusual(BaseModel):
+    """A clause worth asking about: one-sided wording, asymmetric terms or atypical wording."""
+    title: str
+    basis: str  # one-sided wording | asymmetric notice | atypical wording
+    explanation: str
+    quote: str
+    page: int
+    chunk_id: str = ""
+    quote_b: str = ""
+    page_b: int = 0
+    similarity: Optional[float] = None
+
+
 class VagueTerm(BaseModel):
     term: str
     quote: str
@@ -116,6 +142,8 @@ class Report(BaseModel):
     summary_verified_quotes: list[Finding] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)
     key_terms: list[KeyTerm] = Field(default_factory=list)
+    conflicts: list[Conflict] = Field(default_factory=list)
+    unusual: list[Unusual] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     missing_clauses: list[str] = Field(default_factory=list)
     vague_terms: list[VagueTerm] = Field(default_factory=list)

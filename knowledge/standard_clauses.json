@@ -1,5 +1,93 @@
 {
-  "_placeholder": true,
-  "notice period": ["Either party may terminate this agreement by giving one month's written notice to the other party."],
-  "security deposit": ["The security deposit shall be refunded without interest at the time of vacating the premises, after deducting any dues."]
+  "_note": "Typical, balanced wording for common clauses in Indian rental and employment agreements. Written by the LexLocal team as a reference point for 'unusual wording' detection only. These are not model clauses and not legal advice.",
+  "rent": [
+    "The Tenant shall pay a monthly rent of Rs. 20,000 on or before the 5th day of every month.",
+    "The monthly rent shall be paid in advance by bank transfer to the account of the Landlord.",
+    "The rent shall be increased by 5% on renewal of this agreement."
+  ],
+  "security deposit": [
+    "The Tenant has paid an interest-free refundable security deposit equal to two months' rent.",
+    "The security deposit shall be refunded without interest at the time of vacating the premises, after deducting any unpaid rent or charges.",
+    "The Landlord shall refund the deposit within 30 days of the Tenant handing over vacant possession, less reasonable deductions for damage beyond normal wear and tear."
+  ],
+  "term": [
+    "This agreement shall be for a period of 11 months commencing from the start date.",
+    "The agreement may be renewed for a further period on mutually agreed terms.",
+    "The Licensor grants the Licensee a leave and license to occupy the flat for a period of 11 months from the start date."
+  ],
+  "lock-in period": [
+    "Both parties agree to a lock-in period of 3 months during which neither party may terminate this agreement except for breach."
+  ],
+  "notice period": [
+    "Either party may terminate this agreement by giving one month's written notice to the other party.",
+    "After the lock-in period, either party may end this agreement by giving thirty days' prior written notice."
+  ],
+  "termination for breach": [
+    "The Landlord may terminate this agreement if the Tenant fails to pay rent for two consecutive months after giving 15 days' written notice to cure the default."
+  ],
+  "maintenance and repairs": [
+    "Minor day-to-day repairs shall be carried out by the Tenant, and major or structural repairs shall be the responsibility of the Landlord.",
+    "The Tenant shall keep the premises in good condition, subject to normal wear and tear."
+  ],
+  "inspection and entry": [
+    "The Landlord may inspect the premises at a reasonable time after giving at least 24 hours' notice to the Tenant."
+  ],
+  "use of premises": [
+    "The Tenant shall use the premises for residential purposes only.",
+    "The Tenant shall not sublet or part with possession of the premises without the prior written consent of the Landlord."
+  ],
+  "utilities": [
+    "Electricity and water charges as per actual meter readings shall be paid by the Tenant."
+  ],
+  "late payment": [
+    "If rent is not paid within 10 days of the due date, the Tenant shall pay a late fee of Rs. 500."
+  ],
+  "dispute resolution": [
+    "Any dispute arising out of this agreement shall be subject to the jurisdiction of the courts where the premises are located.",
+    "Any dispute shall be referred to a sole arbitrator appointed by mutual consent of both parties."
+  ],
+  "liability and indemnity": [
+    "Each party shall be responsible for loss or damage caused by its own negligence."
+  ],
+  "salary": [
+    "The Employee shall be paid an annual cost to company as set out in the annexure, payable monthly.",
+    "Salary shall be paid on or before the last working day of each month."
+  ],
+  "probation": [
+    "The Employee shall be on probation for a period of six months, which may be extended by up to three months with written reasons."
+  ],
+  "employment notice": [
+    "After confirmation, either party may terminate employment by giving 30 days' written notice or salary in lieu of notice.",
+    "During probation, either party may terminate employment by giving 15 days' written notice."
+  ],
+  "leave": [
+    "The Employee is entitled to paid leave each calendar year as per the Company's leave policy, in addition to public holidays."
+  ],
+  "confidentiality": [
+    "The Employee shall keep confidential all non-public information of the Company during and after employment."
+  ],
+  "post-employment restrictions": [
+    "For a period of 6 months after leaving, the Employee shall not solicit clients of the Company with whom the Employee worked."
+  ],
+  "intellectual property": [
+    "Work product created by the Employee in the course of employment shall belong to the Company."
+  ],
+  "working hours": [
+    "Normal working hours are 9 hours per day, five days a week, with reasonable flexibility."
+  ],
+  "governing law": [
+    "This agreement shall be governed by the laws of India and the courts at the city where it is signed shall have jurisdiction."
+  ],
+  "bonus": [
+    "The Employee may be eligible for an annual performance bonus as per the Company's bonus policy."
+  ],
+  "appointment": [
+    "The Company appoints the Employee to the position of Software Engineer with effect from the joining date, reporting to the team manager."
+  ],
+  "stamp duty": [
+    "The stamp duty and registration charges for this agreement shall be shared equally by both parties."
+  ],
+  "general compliance": [
+    "The Tenant shall comply with the bye-laws of the housing society as applicable to all residents."
+  ]
 }

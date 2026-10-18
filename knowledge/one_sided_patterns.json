@@ -1,4 +1,7 @@
 {
-  "_placeholder": true,
-  "items": ["sole discretion", "without any notice", "without assigning any reason", "shall not be refunded", "forfeit", "at any time without", "waives all rights", "irrevocably", "shall not be liable for any", "unilaterally"]
+  "_note": "Phrases that often signal a one-sided term. A hit means 'worth asking about', never a conclusion.",
+  "items": ["sole discretion", "without any notice", "without assigning any reason", "shall not be refunded", "forfeit",
+            "at any time without", "waives all rights", "irrevocably", "shall not be liable for any", "unilaterally",
+            "as it deems fit", "shall be final", "for any reason whatsoever", "howsoever caused", "appointed by the licensor",
+            "appointed by the landlord", "appointed by the company", "at any time for inspection", "entire deposit"]
 }

@@ -9,7 +9,7 @@ import time
 from typing import Callable, Optional
 
 from lexlocal import config, knowledge
-from lexlocal.analysis import guardrails
+from lexlocal.analysis import consistency, guardrails
 from lexlocal.analysis.verifier import Verifier, check_numbers
 from lexlocal.extract import categories as cats
 from lexlocal.extract.rules import extract_facts
@@ -205,6 +205,13 @@ class Analyzer:
         report.jurisdiction_notes = jurisdiction_notes(doc.text, facts)
         stage("rules", t)
 
+        t = time.perf_counter()
+        progress("Checking for conflicts and one-sided wording", 0.12)
+        injected = {c.id for c in chunks if any(fl.quote[:60] in c.text for fl in report.injection_flags)}
+        report.conflicts = consistency.rule_conflicts(doc, chunks, report.key_terms)
+        report.unusual = consistency.unusual_clauses(doc, chunks, skip_chunks=injected)
+        stage("consistency", t)
+
         llm_ok = self.llm.health().get("ok", False)
         if not llm_ok:
             report.warnings.append("Local model (Ollama) is not reachable — showing rule-based results only.")
@@ -271,6 +278,16 @@ class Analyzer:
         for rf in self._rule_findings(report, verifier, facts):
             if not any(_overlaps(rf, g) for g in findings):
                 findings.append(rf)
+
+        # ---- model check for contradictions between clause pairs (capped; rule conflicts are not re-checked)
+        if llm_ok and config.PAIRWISE_CHECKS > 0:
+            t = time.perf_counter()
+            progress("Checking clause pairs for contradictions (Gemma)", 0.93)
+            covered = {c.chunk_a for c in report.conflicts} | {c.chunk_b for c in report.conflicts}
+            extra, rej = consistency.model_conflicts(self.llm, llm_chunks, verifier, config.PAIRWISE_CHECKS, covered)
+            report.conflicts += extra
+            report.rejected += rej
+            stage("pairwise", t)
 
         findings.sort(key=lambda f: (SEVERITY_ORDER[f.severity], -f.confidence))
         report.findings = findings

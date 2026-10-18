@@ -16,13 +16,14 @@ if config.NETGUARD_MODE == "strict":
 import streamlit as st  # noqa: E402
 
 from lexlocal import knowledge  # noqa: E402
+from lexlocal.analysis import consistency  # noqa: E402
 from lexlocal.analysis.analyzer import Analyzer  # noqa: E402
 from lexlocal.analysis.qa import QAEngine  # noqa: E402
 from lexlocal.extract import structured  # noqa: E402
 from lexlocal.extract.categories import label  # noqa: E402
 from lexlocal.ingest.parser import IngestError, parse_bytes  # noqa: E402
 from lexlocal.llm.client import OllamaClient  # noqa: E402
-from lexlocal.models import SEVERITY_ORDER, Kind  # noqa: E402
+from lexlocal.models import SEVERITY_ORDER, Kind, Severity  # noqa: E402
 from lexlocal.privacy.logging_setup import clear_document, register_document, setup_logging  # noqa: E402
 from lexlocal.report import render  # noqa: E402
 from lexlocal.retrieval.index import HybridIndex, embedder_status, get_embedder  # noqa: E402
@@ -58,7 +59,7 @@ def highlight(passage: str, quote: str | list[str]) -> str:
 
 DOC_KEYS = ["doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
             "nav_clause", "nav_quote", "view"]
-VIEWS = ["Overview", "Top concerns", "Findings by category", "Missing and vague", "Document", "Ask", "Safety and privacy"]
+VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Document", "Ask", "Safety and privacy"]
 
 
 def jump_to(chunk_id: str, quote: str | None = None):
@@ -247,6 +248,8 @@ for w in report.warnings:
 if report.injection_flags:
     st.error(f"**Instruction-like text found in the document ({len(report.injection_flags)}).** "
              "It was treated as untrusted data and did not change the analysis. See *Safety and privacy*.")
+if report.conflicts:
+    st.warning(f"**{len(report.conflicts)} place(s) in the document seem to disagree with each other.** See *Worth asking about*.")
 
 st.session_state.setdefault("view", "Overview")
 view = st.segmented_control("View", VIEWS, key="view", label_visibility="collapsed") or "Overview"
@@ -306,6 +309,50 @@ if view == "Top concerns":
                 + disc["escalation"])
     for i, f in enumerate(tc):
         show_finding(f, f"tc{i}")
+
+if view == "Worth asking about":
+    st.markdown("#### Places that seem to disagree")
+    if report.conflicts:
+        st.caption("Two parts of the document appear to say different things about the same matter. "
+                   "This is not a conclusion about which one applies. Ask the other party, or a lawyer, to clarify.")
+        for i, cf in enumerate(report.conflicts):
+            with st.container(border=True):
+                src = "found by rules" if cf.source == "rules" else "found by the local model, both quotes verified"
+                st.markdown(f"{theme.badge('Conflict', theme.SEVERITY_COLOR[Severity.medium])} "
+                            f"<span class='ll-ftitle'>{html.escape(cf.title)}</span>", unsafe_allow_html=True)
+                st.caption(src)
+                st.markdown(esc(cf.explanation))
+                qa_col, qb_col = st.columns(2) if cf.quote_b else (st.container(), None)
+                with qa_col:
+                    st.markdown(f"> **Page {cf.page_a}:** “{esc(cf.quote_a)}”")
+                    if cf.chunk_a:
+                        st.button("View in document", key=f"cfa_{i}", on_click=jump_to, args=(cf.chunk_a, cf.quote_a))
+                if qb_col is not None:
+                    with qb_col:
+                        st.markdown(f"> **Page {cf.page_b}:** “{esc(cf.quote_b)}”")
+                        if cf.chunk_b:
+                            st.button("View in document", key=f"cfb_{i}", on_click=jump_to, args=(cf.chunk_b, cf.quote_b))
+    else:
+        st.write("No contradictions were detected by the checks LexLocal runs. That does not guarantee there are none.")
+    st.markdown("#### One-sided or unusual wording")
+    if report.unusual:
+        st.caption("Worth asking about. These flags describe the wording, not whether a clause is valid or fair.")
+        for i, u in enumerate(report.unusual):
+            with st.container(border=True):
+                basis = {"asymmetric notice": "Asymmetric terms", "one-sided wording": "One-sided wording",
+                         "atypical wording": "Atypical wording"}[u.basis]
+                st.markdown(f"{theme.badge(basis)} <span class='ll-ftitle'>{html.escape(u.title)}</span>",
+                            unsafe_allow_html=True)
+                st.markdown(esc(u.explanation))
+                st.markdown(f"> **Page {u.page}:** “{esc(u.quote)}”")
+                if u.quote_b:
+                    st.markdown(f"> **Page {u.page_b}:** “{esc(u.quote_b)}”")
+                if u.similarity is not None:
+                    st.caption(f"Similarity to the closest typical clause: {u.similarity:.2f} (flagged below {consistency.ATYPICAL_THRESHOLD})")
+                if u.chunk_id:
+                    st.button("View in document", key=f"un_{i}", on_click=jump_to, args=(u.chunk_id, u.quote))
+    else:
+        st.write("No one-sided or unusual wording was flagged.")
 
 if view == "Findings by category":
     groups = render.by_category(report)
