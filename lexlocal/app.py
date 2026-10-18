@@ -16,7 +16,7 @@ if config.NETGUARD_MODE == "strict":
 import streamlit as st  # noqa: E402
 
 from lexlocal import knowledge  # noqa: E402
-from lexlocal.analysis import consistency  # noqa: E402
+from lexlocal.analysis import consistency, translate  # noqa: E402
 from lexlocal.analysis.analyzer import Analyzer  # noqa: E402
 from lexlocal.analysis.qa import QAEngine  # noqa: E402
 from lexlocal.extract import structured  # noqa: E402
@@ -40,6 +40,17 @@ def esc(text: str) -> str:
     return _MD_SPECIAL.sub(r"\\\1", text or "")
 
 
+def show_text(english: str) -> None:
+    """Show LexLocal's own explanation, translated if a verified translation exists (quotes are never translated)."""
+    lang = st.session_state.get("lang", "en")
+    translated = st.session_state.get("tr", {}).get(lang, {}).get(english) if lang != "en" else None
+    if translated:
+        st.markdown(esc(translated))
+        st.caption(f"English: {english}")
+    else:
+        st.markdown(esc(english))
+
+
 def highlight(passage: str, quote: str | list[str]) -> str:
     """HTML-escaped passage with each quote wrapped in <mark> (overlapping spans are merged)."""
     spans = []
@@ -58,7 +69,7 @@ def highlight(passage: str, quote: str | list[str]) -> str:
     return "".join(out) + html.escape(passage[pos:])
 
 
-DOC_KEYS = ["cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
+DOC_KEYS = ["tr", "cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
             "nav_clause", "nav_quote", "view"]
 VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Document", "Ask", "Safety and privacy"]
 
@@ -104,7 +115,8 @@ def panic_wipe():
 
 # ------------------------------------------------------------------ page
 st.set_page_config(page_title="LexLocal", page_icon=str(config.ROOT / "lexlocal" / "ui" / "assets" / "favicon.png"), layout="wide")
-disc = knowledge.disclaimer("en")
+LANG = st.session_state.get("lang", "en")
+disc = knowledge.disclaimer(LANG)  # fixed, pre-translated text; never machine translated
 
 st.markdown(theme.CSS, unsafe_allow_html=True)
 if not st.session_state.get("splash_shown"):
@@ -165,6 +177,9 @@ with st.sidebar:
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
     mode = st.radio("Mode", ["Analyse a document", "Compare two versions"], key="mode")
+    st.selectbox("Explanation language", ["en", *translate.LANGUAGES], key="lang",
+                 format_func=lambda c: knowledge.disclaimer(c)["name"],
+                 help="Explanations are translated on this device by the local model. Quotes stay in the original.")
     st.divider()
     if st.button("Delete document", width="stretch",
                  help="Removes the document, results and its encrypted temporary files from this session"):
@@ -271,7 +286,7 @@ def show_finding(f, key: str):
                    f"Quote verified ({f.match_score:.0f}% match) · source: {f.source}"
                    + (f" · OCR page confidence {f.signals['ocr']:.0%}" if "ocr" in f.signals else ""),
                    help=render.signals_text(f.signals))
-        st.markdown(esc(f.plain_explanation))
+        show_text(f.plain_explanation)
         st.markdown(f"> **Document says (page {f.page}):** “{esc(f.quote)}”")
         if f.ambiguity_note:
             st.markdown(f"**Unclear wording:** {esc(f.ambiguity_note)}")
@@ -309,11 +324,33 @@ if report.conflicts:
     st.warning(f"**{len(report.conflicts)} place(s) in the document seem to disagree with each other.** See *Worth asking about*.")
 
 st.session_state.setdefault("view", "Overview")
+if LANG != "en":
+    name = knowledge.disclaimer(LANG)["name"]
+    if LANG not in st.session_state.setdefault("tr", {}):
+        texts = list(dict.fromkeys([report.summary] + [f.plain_explanation for f in report.findings]
+                                   + [f.plain_explanation for f in report.summary_verified_quotes]))
+        texts = [x for x in texts if x]
+        c1, c2 = st.columns([3, 1], vertical_alignment="center")
+        c1.markdown(f"Explanations can be shown in **{html.escape(name)}**. They are translated on this device "
+                    f"({len(texts)} texts). Quotes from the document stay in the original language.", unsafe_allow_html=True)
+        if c2.button("Translate", type="primary", width="stretch"):
+            with st.spinner(f"Translating into {name} locally..."):
+                out = translate.translate_texts(llm, texts, LANG) if llm.health().get("ok") else [None] * len(texts)
+            st.session_state.tr[LANG] = {src: dst for src, dst in zip(texts, out) if dst}
+            st.rerun()
+    else:
+        done = len(st.session_state.tr[LANG])
+        st.caption(f"{html.escape(knowledge.disclaimer(LANG)['machine_translated'])} ({done} texts translated; "
+                   "any that failed the checks are shown in English.)")
+
 view = st.segmented_control("View", VIEWS, key="view", label_visibility="collapsed") or "Overview"
 
 if view == "Overview":
     st.markdown("#### Plain-language summary")
-    st.markdown(esc(report.summary) if report.summary else "_Summary unavailable (local model not reachable)._")
+    if report.summary:
+        show_text(report.summary)
+    else:
+        st.markdown("_Summary unavailable (local model not reachable)._")
     if report.summary_verified_quotes:
         st.markdown("**Key points (each backed by a verified quote):**")
         for f in report.summary_verified_quotes:
