@@ -72,11 +72,12 @@ def notes(doc: Document, facts: list[Fact]) -> tuple[JurisdictionInfo, list[Juri
             spec = {"match": [topic], "note": spec}
         if not isinstance(spec, dict):
             continue
-        hit = next((m for m in spec.get("match", []) if m.lower() in low), None)
-        if not hit:
+        # Every mention of any match term, in document order; cite a real sentence rather than an ALL-CAPS heading.
+        spans = sorted((m.start(),) + _sentence_around(doc.text, m.start(), m.end())
+                       for term in spec.get("match", []) for m in re.finditer(re.escape(term.lower()), low))
+        if not spans:
             continue
-        i = low.find(hit.lower())
-        s, e = _sentence_around(doc.text, i, i + len(hit))
+        i, s, e = next(((i, s, e) for i, s, e in spans if not doc.text[s:e].strip().isupper()), spans[0])
         out.append(JurisdictionNote(topic=topic, note=f"{spec['note']} {who[0].upper() + who[1:]} can confirm what applies.",
                                     quote=doc.text[s:e].strip(), page=doc.page_for_offset(i)))
     return info, out

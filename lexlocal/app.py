@@ -278,10 +278,15 @@ with st.sidebar:
 
 st.subheader(f"{esc(report.doc_name)} — {report.doc_type} agreement")
 for w in report.warnings:
+    if report.adversarial and w.startswith("Content a reader would not see"):
+        continue  # shown as the red banner below
     st.warning(w)
 if report.injection_flags:
     st.error(f"**Instruction-like text found in the document ({len(report.injection_flags)}).** "
              "It was treated as untrusted data and did not change the analysis. See *Safety and privacy*.")
+if report.adversarial:
+    st.error(f"**Hidden or disguised content found ({len(report.adversarial)}).** Text a reader cannot see, invisible "
+             "characters or look-alike letters were kept out of the analysis. See *Safety and privacy*.")
 if report.conflicts:
     st.warning(f"**{len(report.conflicts)} place(s) in the document seem to disagree with each other.** See *Worth asking about*.")
 
@@ -504,6 +509,20 @@ if view == "Ask":
         st.rerun()
 
 if view == "Safety and privacy":
+    st.markdown("#### Hidden or disguised content")
+    if report.adversarial:
+        st.caption("A reader would not see this content, but a computer reading the file would. LexLocal removed hidden "
+                   "text before analysis, stripped invisible characters and normalised look-alike letters. "
+                   "Ask whoever sent the document why it is there.")
+        for a in report.adversarial:
+            with st.container(border=True):
+                st.markdown(f"{theme.badge(a.kind.capitalize(), theme.SEVERITY_COLOR[Severity.high])} "
+                            f"<span class='ll-meta'>page {a.page}</span>", unsafe_allow_html=True)
+                st.markdown(esc(a.detail))
+                if a.text and a.kind == "hidden text":
+                    st.markdown(f"> “{esc(a.text)}”")
+    else:
+        st.write("No hidden text, invisible characters or look-alike letters were found.")
     st.markdown("#### Prompt-injection scan")
     if report.injection_flags:
         for f in report.injection_flags:

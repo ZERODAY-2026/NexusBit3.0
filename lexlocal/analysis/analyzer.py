@@ -193,6 +193,7 @@ class Analyzer:
         fact_values = [f.value for f in facts]
         verifier = Verifier(doc, chunks)
         report.injection_flags = guardrails.scan_injection(doc)
+        report.adversarial = list(doc.adversarial)
         llm_chunks = guardrails.sanitize_chunks(chunks, report.injection_flags)
         llm_by_id = {c.id: c for c in llm_chunks}
         report.vague_terms = find_vague(doc, chunks)

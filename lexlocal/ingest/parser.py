@@ -11,7 +11,8 @@ import re
 import unicodedata
 
 from lexlocal import config
-from lexlocal.models import Document, Page
+from lexlocal.ingest import adversarial
+from lexlocal.models import AdversarialFlag, Document, Page
 
 log = logging.getLogger("lexlocal.ingest")
 
@@ -32,12 +33,14 @@ CONTRACT_MARKERS = [
     "obligation", "shall", "term of", "consideration", "agree",
 ]
 
-_ZERO_WIDTH = re.compile("[\u200b\u200c\u200d\u2060\ufeff]")
 
 
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKC", text)
-    text = _ZERO_WIDTH.sub("", text)
+    text = adversarial.INVISIBLE_RE.sub("", text)  # zero-width and bidi controls
+    text = adversarial.normalize_homoglyphs(text)
+    # Some fonts extract "-" as a soft hyphen (U+00AD): drop it at line ends, keep it as "-" elsewhere.
+    text = text.replace(chr(0xAD) + chr(10), "").replace(chr(0xAD), "-")
     text = text.replace("\r\n", "\n").replace("\r", "\n").replace(" ", " ")
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"-\n(?=[a-z])", "", text)  # de-hyphenate line breaks
@@ -45,17 +48,23 @@ def normalize_text(text: str) -> str:
     return text.strip()
 
 
-def _assemble(name: str, kind: str, page_texts: list[str], warnings: list[str]) -> Document:
+def _assemble(name: str, kind: str, page_texts: list[str], warnings: list[str],
+              flags: list[AdversarialFlag] | None = None) -> Document:
     pages: list[Page] = []
     parts: list[str] = []
+    flags = list(flags or [])
     offset = 0
     for i, raw in enumerate(page_texts, start=1):
+        flags += adversarial.scan_text(raw, i)
         t = normalize_text(raw)
         pages.append(Page(number=i, text=t, start=offset, end=offset + len(t) + 2))
         parts.append(t)
         offset += len(t) + 2
     text = "\n\n".join(parts)
-    return Document(name=name, kind=kind, pages=pages, text=text, warnings=warnings)
+    if flags:
+        warnings = warnings + [f"Content a reader would not see was found ({len(flags)} item(s)) and kept out of the "
+                               "analysis. See Safety and privacy."]
+    return Document(name=name, kind=kind, pages=pages, text=text, warnings=warnings, adversarial=flags)
 
 
 def _parse_pdf(name: str, data: bytes) -> Document:
@@ -74,9 +83,12 @@ def _parse_pdf(name: str, data: bytes) -> Document:
             raise IngestError("empty", "This PDF has no pages.")
         if doc.page_count > config.MAX_PAGES:
             raise IngestError("too_many_pages", f"This PDF has {doc.page_count} pages; the limit is {config.MAX_PAGES}.")
-        page_texts, image_pages = [], 0
+        page_texts, image_pages, flags = [], 0, []
         for page in doc:
             t = page.get_text("text", sort=True) or ""
+            page_flags, hidden = adversarial.scan_pdf_page(page)
+            flags += page_flags
+            t = adversarial.remove_hidden(t, hidden)
             page_texts.append(t)
             if len(t.strip()) < config.MIN_TEXT_CHARS_PER_PAGE and page.get_images(full=False):
                 image_pages += 1
@@ -96,7 +108,7 @@ def _parse_pdf(name: str, data: bytes) -> Document:
     warnings = []
     if low_text_pages and low_text_pages >= max(1, len(page_texts) // 2):
         warnings.append(f"{low_text_pages} of {len(page_texts)} pages have little or no text (possibly scanned). Those pages were not analysed.")
-    return _assemble(name, "pdf", page_texts, warnings)
+    return _assemble(name, "pdf", page_texts, warnings, flags)
 
 
 def _parse_docx(name: str, data: bytes) -> Document:

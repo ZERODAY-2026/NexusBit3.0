@@ -52,11 +52,33 @@ _NOTICE = re.compile(
 )
 
 
+# ". " after these is not a sentence end ("Rs. 25,000", "No. 14", "Mr. Kumar", "Pvt. Ltd. having").
+_ABBREV = re.compile(r"(?:\b(?:Rs|No|Nos|Mr|Mrs|Ms|Dr|Shri|Smt|Pvt|Ltd|Co|St|vs|viz|i\.e|e\.g|cl|art|sec)|\b[A-Z])$", re.IGNORECASE)
+
+
+def _is_stop(text: str, i: int) -> bool:
+    return not _ABBREV.search(text[max(0, i - 6):i])
+
+
+def _next_stop(text: str, pos: int) -> int:
+    i = text.find(". ", pos)
+    while i != -1 and not _is_stop(text, i):
+        i = text.find(". ", i + 2)
+    return i
+
+
+def _last_stop(text: str, pos: int) -> int:
+    i = text.rfind(". ", 0, pos)
+    while i != -1 and not _is_stop(text, i):
+        i = text.rfind(". ", 0, i)
+    return i
+
+
 def _sentence_around(text: str, start: int, end: int, limit: int = 260) -> tuple[int, int]:
     """Expand [start,end) to the enclosing sentence (exact offsets), capped at `limit`."""
-    s = max(text.rfind(". ", 0, start), text.rfind("\n", 0, start))
+    s = max(_last_stop(text, start), text.rfind("\n", 0, start))
     s = 0 if s < 0 else s + 1
-    e_candidates = [i for i in (text.find(". ", end), text.find("\n", end)) if i != -1]
+    e_candidates = [i for i in (_next_stop(text, end), text.find("\n", end)) if i != -1]
     e = min(e_candidates) + 1 if e_candidates else len(text)
     if e - s > limit:
         s = max(s, start - limit // 2)
