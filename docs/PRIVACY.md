@@ -11,7 +11,7 @@ telemetry ever leaves the machine.
 | Library telemetry (Streamlit, Hugging Face) | `browser.gatherUsageStats=false`, `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`, `HF_HUB_DISABLE_TELEMETRY=1`. The embedding model is loaded from a local path with `local_files_only=True` |
 | External assets in the UI (fonts, CDNs) | None are used. The Streamlit server binds to `127.0.0.1` only |
 | Document text leaking into logs | Code logs only metadata (counts, timings, token counts). `DocTextFilter` redacts any log record containing a fragment of the loaded document. Covered by tests |
-| Document persisted on disk | Uploads stay in memory (`st.file_uploader` bytes). Nothing is written to disk, and **Clear document** wipes the session state |
+| Document persisted on disk | Uploads stay in memory (`st.file_uploader` bytes). Nothing is written to disk except OCR temporary files, which are encrypted (see Storage). **Delete document** and **Panic wipe** clear the session |
 | A malicious document steering the model | Prompt-injection scan, sanitization, delimiters, schema-constrained output and output verification (see ARCHITECTURE.md) |
 | Ollama itself phoning home | Ollama runs locally. Its only network use is `ollama pull` at setup time. Run with Wi-Fi off to prove it, and `scripts/monitor_connections.*` shows its connections too |
 
@@ -54,8 +54,16 @@ RESULT: only loopback connections observed (240 samples). Log: logs\connections.
 
 ## Storage and deletion
 
-- Document content is held in memory only, in the Streamlit session state. Use **Clear document** in the sidebar or close the session.
+- Document content is held in memory only, in the Streamlit session state. Use **Delete document** or **Panic wipe** in the sidebar, or close the session.
 - Log files (`logs/lexlocal.log`, git-ignored) contain metadata only.
+- **Encrypted temporary store** (`lexlocal/privacy/vault.py`): the only time LexLocal writes document-derived
+  data to disk is OCR, because Tesseract reads page images from files. Each browser session gets a private temp
+  directory (`mkdtemp`, owner-only permissions where supported). Cached OCR results are encrypted with Fernet
+  (AES-128-CBC with HMAC-SHA256) under a key held only in memory. Tesseract's own temporary image files are created
+  in the same directory and deleted by Tesseract right away.
+- **Wiping:** files are overwritten with zeros, then deleted, and the key is dropped on **Delete document**, on
+  **Panic wipe**, when Streamlit discards the session after the tab closes (garbage-collection finalizer), and at
+  process exit. Tested in `tests/test_vault.py`.
 - `models/` holds the public embedding model and nothing about your documents.
 
 ## Limitations

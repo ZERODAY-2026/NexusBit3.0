@@ -24,6 +24,7 @@ from lexlocal.extract.categories import label  # noqa: E402
 from lexlocal.ingest.parser import IngestError, parse_bytes  # noqa: E402
 from lexlocal.llm.client import OllamaClient  # noqa: E402
 from lexlocal.models import SEVERITY_ORDER, Kind, Severity  # noqa: E402
+from lexlocal.privacy.vault import Vault  # noqa: E402
 from lexlocal.privacy.logging_setup import clear_document, register_document, setup_logging  # noqa: E402
 from lexlocal.report import render  # noqa: E402
 from lexlocal.retrieval.index import HybridIndex, embedder_status, get_embedder  # noqa: E402
@@ -69,11 +70,36 @@ def jump_to(chunk_id: str, quote: str | None = None):
     st.session_state.nav_quote = quote
 
 
+def session_vault() -> Vault:
+    """This browser session's encrypted scratch space (wiped with the document or when the session ends)."""
+    v = st.session_state.get("vault")
+    if v is None or not v.active:
+        v = st.session_state.vault = Vault()
+    return v
+
+
 def clear_doc():
     for k in DOC_KEYS:
         st.session_state.pop(k, None)
+    v = st.session_state.pop("vault", None)
+    if v is not None and v.active:
+        v.wipe()
     clear_document()
     gc.collect()
+
+
+def panic_wipe():
+    """Remove everything this session holds: document, results, history, vault, caches."""
+    clear_doc()
+    gen = st.session_state.get("upload_gen", 0) + 1  # a fresh uploader widget drops the uploaded file
+    keep = {"splash_shown"}
+    for k in list(st.session_state.keys()):
+        if k not in keep:
+            del st.session_state[k]
+    st.session_state.upload_gen = gen
+    st.cache_data.clear()
+    gc.collect()
+    st.session_state.wiped = True
 
 
 # ------------------------------------------------------------------ page
@@ -130,14 +156,21 @@ with st.sidebar:
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
     st.divider()
-    if st.button("Clear document", width="stretch", help="Removes the document and results from memory"):
+    if st.button("Delete document", width="stretch",
+                 help="Removes the document, results and its encrypted temporary files from this session"):
         clear_doc()
+        st.session_state.upload_gen = st.session_state.get("upload_gen", 0) + 1
         st.rerun()
-    st.caption("Session data is held in memory only. Nothing is uploaded or saved to disk.")
+    st.button("Panic wipe", width="stretch", type="primary", on_click=panic_wipe,
+              help="Immediately removes everything this session holds, including chat history and settings")
+    st.caption("Documents stay in memory. Temporary files (OCR only) are encrypted with a key that exists only in "
+               "memory, and are wiped on delete, on panic wipe and when the session ends.")
+    if st.session_state.pop("wiped", False):
+        st.success("Everything from this session was wiped.")
 
 # ------------------------------------------------------------------ upload
 up = st.file_uploader("Upload a rental/lease or employment agreement (PDF, DOCX or TXT, max 25 MB)",
-                      type=["pdf", "docx", "txt"])
+                      type=["pdf", "docx", "txt"], key=f"upload_{st.session_state.get('upload_gen', 0)}")
 if up is not None:
     data = up.getvalue()
     h = hashlib.sha256(data).hexdigest()
@@ -481,6 +514,8 @@ if view == "Safety and privacy":
     st.markdown("#### Privacy")
     st.markdown(f"- Model: `{report.model}` via Ollama on 127.0.0.1\n- Network guard: {'active' if netguard.is_active() else 'off'} · blocked attempts: {len(netguard.blocked_attempts())}\n"
                 "- Document text is never written to disk or logs (log filter redacts any document text).\n"
-                "- Click **Clear document** in the sidebar to remove everything from memory.")
+                "- **Delete document** removes it from memory; **Panic wipe** removes everything this session holds.")
+    v = st.session_state.get("vault")
+    st.markdown(f"- Encrypted temporary store: {'active, ' + str(len(v.files())) + ' encrypted file(s)' if v is not None and v.active else 'empty (nothing written to disk)'}.")
     st.markdown(f"#### Verification\n{len(report.findings)} findings shown, all with verified verbatim quotes. "
                 f"{len(report.rejected)} model claims were rejected or trimmed by the verifier/guardrails and are not shown.")

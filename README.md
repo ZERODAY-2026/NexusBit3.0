@@ -36,7 +36,7 @@ before they sign, and who can't, or shouldn't, upload it to a cloud AI.
 | L7 Gaps | Vague terms ("sole discretion", "reasonable", …), missing expected clauses ("The document does not appear to mention …") and jurisdiction-dependent notes |
 | L8 Q&A | Questions are classified as **document fact** (answered only from verified passages, otherwise *"The document is silent on this"* plus the closest clauses), **legal verdict** (no verdict; what the doc says, labelled general info, and a specific lawyer escalation) or **out of scope** (declined) |
 | Injection defence | Instruction-like text in a document is detected, flagged in the UI and removed from what the model sees. `<document>` delimiters, an untrusted-data system prompt and schema-validated JSON with one retry |
-| L9 Privacy | Network guard on by default (loopback only), status chips and a blocked-attempt counter, no document text in logs, memory-only session, **Clear document** |
+| L9 Privacy | Network guard on by default (loopback only), status chips and a blocked-attempt counter, no document text in logs, memory-only session, **Delete document** and **Panic wipe**, encrypted temporary files |
 | L10 Gemma | Summary, category findings, question classification, grounded Q&A, escalation guidance |
 
 **Anti-fabrication:** a model quote is shown only if it matches the document (normalized exact match, or fuzzy ≥ 90).
