@@ -1,0 +1,14 @@
+# Create a venv specifically using Python 3.12
+py -3.12 -m venv .venv
+
+# Activate it
+.\.venv\Scripts\Activate.ps1
+
+# Upgrade pip inside the new venv
+python -m pip install --upgrade pip
+
+# Install PyTorch CPU
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install the rest of your requirements
+pip install -r requirements.txt

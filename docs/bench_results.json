@@ -2,12 +2,12 @@
   "ollama_version": "0.40.6",
   "models": {
     "gemma4:e4b": {
-      "cold_load_s": 21.39,
-      "median_latency_s": 22.2,
-      "median_tok_s": 14.4,
-      "median_prompt_tok_s": 4308.6,
+      "cold_load_s": 17.76,
+      "median_latency_s": 6.4,
+      "median_tok_s": 50.6,
+      "median_prompt_tok_s": 5615.6,
       "median_out_tokens": 318,
-      "prompt_tokens": 574,
+      "prompt_tokens": 600,
       "valid_json_rate": 1.0,
       "size_bytes": 6583656505,
       "details": {
@@ -25,12 +25,12 @@
       }
     },
     "gemma4:e2b": {
-      "cold_load_s": 21.43,
-      "median_latency_s": 8.32,
-      "median_tok_s": 65.1,
-      "median_prompt_tok_s": 5109.3,
-      "median_out_tokens": 319,
-      "prompt_tokens": 574,
+      "cold_load_s": 11.92,
+      "median_latency_s": 3.51,
+      "median_tok_s": 134.4,
+      "median_prompt_tok_s": 10219.4,
+      "median_out_tokens": 329,
+      "prompt_tokens": 600,
       "valid_json_rate": 1.0,
       "size_bytes": 4587156505,
       "details": {

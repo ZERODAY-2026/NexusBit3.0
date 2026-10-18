@@ -163,11 +163,7 @@ with st.sidebar:
         ollama_chip
         + theme.chip("Network guard active (loopback only)" if netguard.is_active() else "Network guard OFF",
                      True if netguard.is_active() else None)
-        + theme.chip(f"Blocked outbound attempts: <b>{len(blocked)}</b>", not blocked)
-        + theme.chip("Embeddings: local bge-small" if emb_ok else f"Embeddings: BM25 only ({html.escape(embedder_status())})",
-                     True if emb_ok else None)
-        + theme.chip(f"OCR: {html.escape(_ocr_status()[1])}" if _ocr_status()[0] else "OCR: not installed (scanned PDFs declined)",
-                     True if _ocr_status()[0] else None),
+        + theme.chip(f"Blocked outbound attempts: <b>{len(blocked)}</b>", not blocked),
         unsafe_allow_html=True)
     _loading.empty()  # models ready: remove the "please wait" tag
     if blocked:
