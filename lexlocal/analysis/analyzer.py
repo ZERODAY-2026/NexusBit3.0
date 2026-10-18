@@ -13,6 +13,7 @@ from lexlocal.analysis import guardrails
 from lexlocal.analysis.verifier import Verifier, check_numbers
 from lexlocal.extract import categories as cats
 from lexlocal.extract.rules import extract_facts
+from lexlocal.extract.structured import build_key_terms
 from lexlocal.ingest.chunker import chunk_document
 from lexlocal.llm import prompts
 from lexlocal.llm.client import LLMError, OllamaClient
@@ -193,6 +194,7 @@ class Analyzer:
         progress("Extracting facts (rules)", 0.1)
         facts = extract_facts(doc)
         report.facts = facts
+        report.key_terms = build_key_terms(facts, chunks, doc, doc_type)
         fact_values = [f.value for f in facts]
         verifier = Verifier(doc, chunks)
         report.injection_flags = guardrails.scan_injection(doc)

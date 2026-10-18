@@ -18,6 +18,7 @@ import streamlit as st  # noqa: E402
 from lexlocal import knowledge  # noqa: E402
 from lexlocal.analysis.analyzer import Analyzer  # noqa: E402
 from lexlocal.analysis.qa import QAEngine  # noqa: E402
+from lexlocal.extract import structured  # noqa: E402
 from lexlocal.extract.categories import label  # noqa: E402
 from lexlocal.ingest.parser import IngestError, parse_bytes  # noqa: E402
 from lexlocal.llm.client import OllamaClient  # noqa: E402
@@ -257,14 +258,40 @@ if view == "Overview":
         st.markdown("**Key points (each backed by a verified quote):**")
         for f in report.summary_verified_quotes:
             st.markdown(f"- {esc(f.plain_explanation)}  \n  > “{esc(f.quote)}” — *page {f.page}*")
-    st.markdown("#### Key facts (extracted by rules, verbatim)")
-    fb = render.facts_by_type(report)
-    cols = st.columns(3)
-    for i, (ftype, items) in enumerate(fb.items()):
-        with cols[i % 3]:
-            st.markdown(f"**{render.FACT_LABELS.get(ftype, ftype)}**")
-            for f in items[:8]:
-                st.markdown(f"- {esc(f.value)} *(p.{f.page})*", help=f.quote[:300])
+    st.markdown("#### Key terms")
+    st.caption("Extracted by deterministic rules. Each value is shown with the exact sentence it comes from; "
+               "click the page to see it in the document.")
+    widths = [1.4, 1.9, 4.6, 0.9]
+    head = st.columns(widths)
+    for col, name in zip(head, ["Term", "Value", "Document says", "Source"]):
+        col.markdown(f"<div class='ll-meta'>{name}</div>", unsafe_allow_html=True)
+    rows_by_field: dict[str, list] = {}
+    for kt in report.key_terms:
+        rows_by_field.setdefault(kt.field, []).append(kt)
+    for field in structured.FIELDS:
+        items = rows_by_field.get(field, [])
+        if not items and field not in structured.EXPECTED.get(report.doc_type, []):
+            continue
+        st.markdown("<hr style='margin:2px 0;border:none;border-top:1px solid #E7DFCC'>", unsafe_allow_html=True)
+        if not items:
+            c1, c2 = st.columns([widths[0], sum(widths[1:])])
+            c1.markdown(f"**{field}**")
+            c2.caption("Not found by the rules. The document may still cover it in other words; check *Missing and vague*.")
+            continue
+        for j, kt in enumerate(items):
+            c1, c2, c3, c4 = st.columns(widths, vertical_alignment="center")
+            c1.markdown(f"**{field}**" if j == 0 else "")
+            c2.markdown(f"{esc(kt.value)}  \n<span class='ll-meta'>{html.escape(kt.label)}</span>", unsafe_allow_html=True)
+            c3.markdown(f"<div style='font-size:0.86em;color:#5E574C'>“{highlight(kt.quote, kt.value)}”</div>",
+                        unsafe_allow_html=True)
+            if kt.chunk_id:
+                c4.button(f"Page {kt.page}", key=f"kt_{field}_{j}", on_click=jump_to, args=(kt.chunk_id, kt.quote),
+                          type="tertiary", help="Show in document")
+            else:
+                c4.caption(f"Page {kt.page}")
+    with st.expander("All rule-extracted facts"):
+        for ftype, items in render.facts_by_type(report).items():
+            st.markdown(f"**{render.FACT_LABELS.get(ftype, ftype)}:** " + "; ".join(f"{esc(f.value)} (p.{f.page})" for f in items))
     if report.jurisdiction_notes:
         st.markdown("#### Jurisdiction-dependent")
         for n in report.jurisdiction_notes:

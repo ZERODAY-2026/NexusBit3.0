@@ -81,6 +81,16 @@ class Fact(BaseModel):
     end: int
 
 
+class KeyTerm(BaseModel):
+    """One row of the structured key-terms table, anchored to a verbatim quote."""
+    field: str
+    label: str
+    value: str
+    quote: str
+    page: int
+    chunk_id: str = ""
+
+
 class VagueTerm(BaseModel):
     term: str
     quote: str
@@ -105,6 +115,7 @@ class Report(BaseModel):
     summary: str = ""
     summary_verified_quotes: list[Finding] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)
+    key_terms: list[KeyTerm] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     missing_clauses: list[str] = Field(default_factory=list)
     vague_terms: list[VagueTerm] = Field(default_factory=list)

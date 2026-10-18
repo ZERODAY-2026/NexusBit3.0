@@ -23,18 +23,21 @@ PATTERNS: dict[str, re.Pattern] = {
         re.IGNORECASE,
     ),
     "duration": re.compile(
-        rf"\b(?:\d{{1,3}}|{_NUMWORD})(?:\s*\(\s*\d{{1,3}}\s*\))?\s*(?:calendar\s+|working\s+|business\s+)?(?:days?|weeks?|months?|years?)\b",
+        rf"\b(?:\d{{1,3}}|{_NUMWORD})(?:\s*\(\s*(?:\d{{1,3}}|{_NUMWORD})\s*\))?\s*(?:calendar\s+|working\s+|business\s+)?(?:days?|weeks?|months?|years?)\b",
         re.IGNORECASE,
     ),
     "percentage": re.compile(r"\b\d{1,3}(?:\.\d{1,2})?\s?(?:%|per\s?cent|percent)", re.IGNORECASE),
     "governing_law": re.compile(
-        r"(?:governed\s+by|construed\s+in\s+accordance\s+with|subject\s+to)\s+(?:and\s+construed\s+in\s+accordance\s+with\s+)?the\s+laws\s+of\s+[A-Z][A-Za-z ]{2,40}"
-        r"|(?:exclusive\s+)?jurisdiction\s+of\s+(?:the\s+)?courts?\s+(?:at|of|in)\s+[A-Z][A-Za-z]{2,30}",
+        # (?-i:...) keeps place names capitalised: under IGNORECASE, [A-Z] would also swallow "and the courts ...".
+        r"(?:governed\s+by|construed\s+in\s+accordance\s+with|subject\s+to)\s+(?:and\s+construed\s+in\s+accordance\s+with\s+)?the\s+laws\s+of\s+"
+        r"(?:the\s+)?(?:(?-i:State)\s+of\s+)?(?-i:[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})"
+        r"|(?:exclusive\s+)?jurisdiction\s+of\s+(?:the\s+)?courts?\s+(?:at|of|in)\s+(?-i:[A-Z][a-z]{2,30}(?:\s+[A-Z][a-z]+)?)"
+        r"|courts?\s+(?:at|of|in)\s+(?-i:[A-Z][a-z]{2,30})\s+shall\s+have\s+(?:exclusive\s+)?jurisdiction",
         re.IGNORECASE,
     ),
     "party": re.compile(
         r"(?:between|by and between)\s+(?:Mr\.?|Mrs\.?|Ms\.?|Dr\.?|M/s\.?)?\s*([A-Z][A-Za-z.&' ]{2,60}?)(?:,|\s+\(|\s+son|\s+daughter|\s+wife|\s+aged|\s+residing|\s+having|\s+hereinafter)"
-        r"|\band\s+(?:Mr\.?|Mrs\.?|Ms\.?|Dr\.?|M/s\.?)\s*([A-Z][A-Za-z.&' ]{2,60}?)(?:,|\s+\(|\s+son|\s+daughter|\s+wife|\s+aged|\s+residing|\s+having|\s+hereinafter)",
+        r"|\b(?:and|AND|And)\s+(?:Mr\.?|Mrs\.?|Ms\.?|Dr\.?|M/s\.?)\s*([A-Z][A-Za-z.&' ]{2,60}?)(?:,|\s+\(|\s+son|\s+daughter|\s+wife|\s+aged|\s+residing|\s+having|\s+hereinafter)",
     ),
     "role": re.compile(
         r"hereinafter\s+(?:called|referred\s+to\s+as|known\s+as)\s+(?:the\s+)?[\"“']?(Landlord|Tenant|Lessor|Lessee|Licensor|Licensee|Owner|Employer|Employee|Company)[\"”']?",
@@ -43,8 +46,8 @@ PATTERNS: dict[str, re.Pattern] = {
 }
 
 _NOTICE = re.compile(
-    rf"(?:(?:\d{{1,3}}|{_NUMWORD})(?:\s*\(\s*\d{{1,3}}\s*\))?\s*(?:days?|weeks?|months?)['’]?s?\s+(?:prior\s+|advance\s+)?(?:written\s+)?notice"
-    rf"|notice\s+(?:period\s+)?of\s+(?:at\s+least\s+)?(?:\d{{1,3}}|{_NUMWORD})(?:\s*\(\s*\d{{1,3}}\s*\))?\s*(?:days?|weeks?|months?))",
+    rf"(?:(?:\d{{1,3}}|{_NUMWORD})(?:\s*\(\s*(?:\d{{1,3}}|{_NUMWORD})\s*\))?\s*(?:days?|weeks?|months?)['’]?s?\s+(?:prior\s+|advance\s+)?(?:written\s+)?notice"
+    rf"|notice\s+(?:period\s+)?of\s+(?:at\s+least\s+)?(?:\d{{1,3}}|{_NUMWORD})(?:\s*\(\s*(?:\d{{1,3}}|{_NUMWORD})\s*\))?\s*(?:days?|weeks?|months?))",
     re.IGNORECASE,
 )
 
@@ -70,7 +73,9 @@ def extract_facts(doc: Document) -> list[Fact]:
 
     def add(ftype: str, value: str, ms: int, me: int):
         value = re.sub(r"\s+", " ", value).strip(" ,.")
-        key = (ftype, value.lower())
+        # The same duration can mean different things in different clauses (term vs lock-in), so durations
+        # are de-duplicated per sentence; other facts once per document.
+        key = (ftype, value.lower()) if ftype != "duration" else (ftype, value.lower(), _sentence_around(text, ms, me)[0])
         if not value or key in seen:
             return
         seen.add(key)
