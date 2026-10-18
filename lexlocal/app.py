@@ -71,7 +71,7 @@ def highlight(passage: str, quote: str | list[str]) -> str:
 
 DOC_KEYS = ["tr", "cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
             "nav_clause", "nav_quote", "view"]
-VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Document", "Ask", "Safety and privacy"]
+VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Glossary", "Document", "Ask", "Safety and privacy"]
 
 
 def jump_to(chunk_id: str, quote: str | None = None):
@@ -328,7 +328,8 @@ if LANG != "en":
     name = knowledge.disclaimer(LANG)["name"]
     if LANG not in st.session_state.setdefault("tr", {}):
         texts = list(dict.fromkeys([report.summary] + [f.plain_explanation for f in report.findings]
-                                   + [f.plain_explanation for f in report.summary_verified_quotes]))
+                                   + [f.plain_explanation for f in report.summary_verified_quotes]
+                                   + [g.definition for g in report.glossary]))
         texts = [x for x in texts if x]
         c1, c2 = st.columns([3, 1], vertical_alignment="center")
         c1.markdown(f"Explanations can be shown in **{html.escape(name)}**. They are translated on this device "
@@ -483,6 +484,18 @@ if view == "Missing and vague":
         st.caption("These words can be interpreted in different ways. Consider asking what they mean in practice.")
     else:
         st.write("No vague terms from the list were found.")
+
+if view == "Glossary":
+    st.markdown("#### Legal terms in this document")
+    st.caption("General meanings, not legal advice. How a term applies depends on the exact wording and the law.")
+    if not report.glossary:
+        st.write("No terms from the glossary were found.")
+    for g in report.glossary:
+        with st.container(border=True):
+            src = "" if g.source == "glossary" else (" " + theme.badge("Explained by the local model"))
+            st.markdown(f"<span class='ll-ftitle'>{html.escape(g.term)}</span>{src}", unsafe_allow_html=True)
+            show_text(g.definition)
+            st.markdown(f"> **In this document (page {g.page}):** “{esc(g.example)}”")
 
 if view == "Document":
     ids = [c.id for c in chunks]

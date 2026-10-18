@@ -199,6 +199,7 @@ class Report(BaseModel):
     unusual: list[Unusual] = Field(default_factory=list)
     jurisdiction: JurisdictionInfo = Field(default_factory=JurisdictionInfo)
     jurisdiction_items: list[JurisdictionNote] = Field(default_factory=list)
+    glossary: list[GlossaryEntry] = Field(default_factory=list)
     adversarial: list[AdversarialFlag] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)
     missing_clauses: list[str] = Field(default_factory=list)

@@ -9,7 +9,7 @@ import time
 from typing import Callable, Optional
 
 from lexlocal import config, knowledge
-from lexlocal.analysis import confidence, consistency, guardrails, jurisdiction
+from lexlocal.analysis import confidence, consistency, glossary, guardrails, jurisdiction
 from lexlocal.analysis.verifier import Verifier, check_numbers
 from lexlocal.extract import categories as cats
 from lexlocal.extract.rules import extract_facts
@@ -309,6 +309,9 @@ class Analyzer:
             stage("pairwise", t)
 
         findings.sort(key=lambda f: (SEVERITY_ORDER[f.severity], -f.confidence))
+        t = time.perf_counter()
+        report.glossary = glossary.build(doc, self.llm if llm_ok else None)
+        stage("glossary", t)
         report.findings = findings
         report.timings = timings
         progress("Done", 1.0)
