@@ -296,10 +296,21 @@ if view == "Overview":
     with st.expander("All rule-extracted facts"):
         for ftype, items in render.facts_by_type(report).items():
             st.markdown(f"**{render.FACT_LABELS.get(ftype, ftype)}:** " + "; ".join(f"{esc(f.value)} (p.{f.page})" for f in items))
-    if report.jurisdiction_notes:
-        st.markdown("#### Jurisdiction-dependent")
-        for n in report.jurisdiction_notes:
-            st.info(f"{n} *(general information, not a conclusion about this document)*")
+    if report.jurisdiction_items or report.jurisdiction.state:
+        st.markdown("#### Depends on where you are")
+        j = report.jurisdiction
+        if j.state:
+            st.markdown(f"The document points to **{esc(j.state)}**, based on its {j.basis}: “{esc(j.value)}” (page {j.page}). "
+                        "Some rules below differ from state to state.")
+        else:
+            st.markdown("LexLocal could not tell which state's rules apply. Some topics below differ from state to state.")
+        st.caption("General information, not a conclusion about this document. No legal limits are stated here on purpose.")
+        for i, n in enumerate(report.jurisdiction_items):
+            with st.container(border=True):
+                st.markdown(f"<span class='ll-ftitle'>{html.escape(n.topic[0].upper() + n.topic[1:])}</span>",
+                            unsafe_allow_html=True)
+                st.markdown(esc(n.note))
+                st.markdown(f"> **Mentioned on page {n.page}:** “{esc(n.quote)}”")
     st.markdown("#### Stage timings")
     st.dataframe([{"stage": t.stage, "seconds": t.seconds} for t in report.timings], hide_index=True)
 

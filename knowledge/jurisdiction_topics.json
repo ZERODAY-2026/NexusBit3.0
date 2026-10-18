@@ -1,7 +1,23 @@
 {
-  "_placeholder": true,
-  "security deposit": "Rules on security deposit amounts and refunds can differ by state and by local tenancy law. A local lawyer can tell you what applies.",
-  "non-compete": "Whether post-employment restrictions can be relied on depends on the law that applies and the facts. Ask an employment lawyer.",
-  "stamp duty": "Stamp duty and registration requirements for leases differ by state. Check with a local lawyer or the sub-registrar office.",
-  "eviction": "Eviction procedures are governed by state rent-control and tenancy laws, which differ across India."
+  "_note": "General, state-dependent topics. Notes must never state a statutory limit, number or conclusion: only that rules differ and who can confirm. Written by the LexLocal team.",
+  "security deposit": {"match": ["security deposit", "refundable deposit", "deposit"],
+    "note": "Rules on how large a deposit can be and how and when it must be returned can differ by state and by local tenancy law."},
+  "lock-in and early exit": {"match": ["lock-in", "lock in"],
+    "note": "How a lock-in period interacts with a tenant's or employee's right to leave early depends on the applicable law and the exact wording."},
+  "rent increase": {"match": ["escalation", "revise the license fee", "increase the rent", "rent shall be increased", "revised"],
+    "note": "Some states regulate how and when rent can be increased under their tenancy laws."},
+  "eviction and vacating": {"match": ["vacate", "eviction", "remove the belongings", "possession"],
+    "note": "Eviction and recovery of possession follow state rent-control or tenancy procedures, which differ across India."},
+  "registration and stamp duty": {"match": ["stamp duty", "registration", "registered"],
+    "note": "Stamp duty and registration requirements for leases and licences differ by state. A local lawyer or the sub-registrar office can confirm what applies."},
+  "arbitration": {"match": ["arbitrat"],
+    "note": "How an arbitration clause works, including who appoints the arbitrator, depends on the applicable law. A lawyer can explain what it means for you."},
+  "post-employment restrictions": {"match": ["non-compete", "not join", "not solicit", "after leaving"],
+    "note": "Whether restrictions that apply after employment ends can be relied on depends on the applicable law and the facts. An employment lawyer can advise."},
+  "training bond or repayment": {"match": ["training cost", "training bond", "repay", "reimburse"],
+    "note": "Whether an employer can recover training or other costs when an employee leaves depends on the applicable law and the facts."},
+  "working hours and leave": {"match": ["working hours", "paid leave", "overtime"],
+    "note": "Working hours, leave and overtime can be covered by state shops-and-establishments rules as well as the contract."},
+  "late payment interest": {"match": ["interest at", "per annum", "late fee", "penalty"],
+    "note": "How courts treat interest, late fees and penalties can depend on the applicable law and the circumstances."}
 }

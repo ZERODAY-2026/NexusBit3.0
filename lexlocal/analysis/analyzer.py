@@ -9,7 +9,7 @@ import time
 from typing import Callable, Optional
 
 from lexlocal import config, knowledge
-from lexlocal.analysis import confidence, consistency, guardrails
+from lexlocal.analysis import confidence, consistency, guardrails, jurisdiction
 from lexlocal.analysis.verifier import Verifier, check_numbers
 from lexlocal.extract import categories as cats
 from lexlocal.extract.rules import extract_facts
@@ -86,19 +86,6 @@ def find_vague(doc: Document, chunks: list[Chunk]) -> list[VagueTerm]:
                 seen.add(key)
                 out.append(VagueTerm(term=term, quote=c.text[s:e].strip(), page=doc.page_for_offset(c.start + s), chunk_id=c.id))
     return out
-
-
-def jurisdiction_notes(text: str, facts) -> list[str]:
-    topics = knowledge.load("jurisdiction_topics.json")
-    low = text.lower()
-    notes = []
-    gl = [f.value for f in facts if f.type == "governing_law"]
-    if gl:
-        notes.append(f"The document refers to: \"{gl[0]}\". How rules apply can depend on the state and local law — a local lawyer can confirm what applies.")
-    for topic, note in topics.items():
-        if isinstance(note, str) and topic.lower() in low:
-            notes.append(f"{topic.title()}: {note}")
-    return notes
 
 
 def _overlaps(a: Finding, b: Finding) -> bool:
@@ -210,7 +197,8 @@ class Analyzer:
         llm_by_id = {c.id: c for c in llm_chunks}
         report.vague_terms = find_vague(doc, chunks)
         report.missing_clauses = find_missing(doc_type, doc.text) if doc_type != "other" else []
-        report.jurisdiction_notes = jurisdiction_notes(doc.text, facts)
+        report.jurisdiction, report.jurisdiction_items = jurisdiction.notes(doc, facts)
+        report.jurisdiction_notes = [f"{n.topic}: {n.note}" for n in report.jurisdiction_items]
         stage("rules", t)
 
         t = time.perf_counter()
