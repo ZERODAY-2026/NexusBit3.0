@@ -21,3 +21,10 @@
 | D17 | DOCX/TXT "pages" are ~3,000-character sections | These formats have no fixed pagination. The UI notes this | Reporting no page |
 | D18 | Root `app.py` is a thin launcher for `lexlocal/app.py` | Keeps the empty `app.py` stub from the initial commit as the entry point (`streamlit run app.py`) | Moving the entry point |
 | D19 | `dateparser` is pinned but not used yet | It is reserved for normalizing dates in the Phase 2 structured extraction table | Remove it |
+| D20 | **No emojis anywhere**; severity shown as a text label plus a small CSS dot (`aria-hidden`) | Emojis render differently per OS and look informal. Text keeps meaning without colour | Emoji icons (Phase 1) |
+| D21 | **Warm off-white editorial theme** (`lexlocal/ui/theme.py`, `.streamlit/config.toml`), system serif headings and system sans body | No web fonts, so nothing is downloaded. All text/background pairs are at least 6.2:1 (WCAG AA) | Bundling a web font (adds weight and licence notes) |
+| D22 | **Favicon is a local PNG** (`lexlocal/ui/assets/favicon.png`), not an emoji or `:material/...:` icon | Streamlit loads emoji and Material-icon favicons from external URLs | Default Streamlit favicon |
+| D23 | **Pure-CSS splash** (per-letter 3D roll, fade at 2.0 s), shown once per session, hidden under `prefers-reduced-motion`, `aria-hidden` | No JS dependency or CDN, and it never replays on reruns | React/motion component |
+| D24 | `server.fileWatcherType = "none"` | The watcher imported every `transformers` submodule on start, which logged dozens of torchvision tracebacks and slowed startup | Leaving the default |
+| D25 | Docs run `python -m streamlit` instead of the `streamlit` launcher | Venv console launchers hard-code the venv's original path and break if the project folder moves (this happened on the dev machine) | — |
+| D26 | **No-external-assets check is automated** with headless Edge over CDP: every request the page makes is logged and must be loopback. A manual Wi-Fi-off run is still recommended before the demo | Toggling Wi-Fi from the dev agent would cut its own session. CDP logging is stricter, because it shows each URL | Wi-Fi-off only |

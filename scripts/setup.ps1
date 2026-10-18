@@ -35,4 +35,4 @@ try {
 } catch { Write-Warning "Ollama not reachable. Install from https://ollama.com and run 'ollama serve', then: ollama pull gemma4:e4b" }
 
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-Write-Host "`nSetup complete. Run:  .\.venv\Scripts\streamlit run app.py"
+Write-Host "`nSetup complete. Run:  .\.venv\Scripts\python -m streamlit run app.py"

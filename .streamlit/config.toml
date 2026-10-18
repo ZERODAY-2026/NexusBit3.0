@@ -3,6 +3,8 @@ address = "127.0.0.1"
 headless = true
 maxUploadSize = 25
 enableXsrfProtection = true
+# The watcher imports every transformers submodule on start (slow, noisy). Not needed outside development.
+fileWatcherType = "none"
 
 [browser]
 gatherUsageStats = false
@@ -12,4 +14,24 @@ serverAddress = "127.0.0.1"
 toolbarMode = "minimal"
 
 [theme]
-font = "sans serif"
+base = "light"
+backgroundColor = "#FBF8F1"
+secondaryBackgroundColor = "#F3EEE2"
+textColor = "#1F1D1A"
+primaryColor = "#7A2E2E"
+borderColor = "#E7DFCC"
+linkColor = "#7A2E2E"
+codeBackgroundColor = "#F3EEE2"
+font = "sans-serif"
+headingFont = "serif"
+baseRadius = "8px"
+showWidgetBorder = true
+blueColor = "#5B6B7A"
+blueBackgroundColor = "#EEF0EE"
+blueTextColor = "#2E3A45"
+redBackgroundColor = "#F6E7E3"
+redTextColor = "#7A2E2E"
+orangeBackgroundColor = "#F7EEDC"
+orangeTextColor = "#6B4510"
+greenBackgroundColor = "#EAF0E6"
+greenTextColor = "#2F5538"

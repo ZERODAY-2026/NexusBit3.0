@@ -32,7 +32,7 @@ CONTRACT_MARKERS = [
     "obligation", "shall", "term of", "consideration", "agree",
 ]
 
-_ZERO_WIDTH = re.compile("[​‌‍⁠﻿]")
+_ZERO_WIDTH = re.compile("[\u200b\u200c\u200d\u2060\ufeff]")
 
 
 def normalize_text(text: str) -> str:

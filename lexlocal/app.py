@@ -25,6 +25,7 @@ from lexlocal.models import Kind  # noqa: E402
 from lexlocal.privacy.logging_setup import clear_document, register_document, setup_logging  # noqa: E402
 from lexlocal.report import render  # noqa: E402
 from lexlocal.retrieval.index import HybridIndex, embedder_status, get_embedder  # noqa: E402
+from lexlocal.ui import theme  # noqa: E402
 
 setup_logging(config.LOG_LEVEL, config.LOG_DIR / "lexlocal.log")
 
@@ -55,13 +56,18 @@ def clear_doc():
 
 
 # ------------------------------------------------------------------ page
-st.set_page_config(page_title="LexLocal — private contract triage", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="LexLocal", page_icon=str(config.ROOT / "lexlocal" / "ui" / "assets" / "favicon.png"), layout="wide")
 disc = knowledge.disclaimer("en")
 
+st.markdown(theme.CSS, unsafe_allow_html=True)
+if not st.session_state.get("splash_shown"):
+    st.session_state.splash_shown = True
+    st.markdown(theme.SPLASH, unsafe_allow_html=True)
+
 st.markdown(
-    "<div style='padding:10px 14px;border:2px solid #2e7d32;border-radius:8px;margin-bottom:8px'>"
-    "<b>🔒 Runs 100% on your device · Not legal advice</b><br>"
-    f"<span style='font-size:0.9em'>{html.escape(disc['disclaimer'])}</span></div>",
+    "<div class='ll-masthead'><span class='ll-title'>LexLocal</span>"
+    "<span class='ll-tag'>Runs entirely on your device &middot; Not legal advice</span></div>"
+    f"<div class='ll-notice'>{html.escape(disc['disclaimer'])}</div>",
     unsafe_allow_html=True,
 )
 
@@ -75,32 +81,35 @@ llm = OllamaClient(model=st.session_state.get("model", config.MODEL))
 
 # ------------------------------------------------------------------ sidebar
 with st.sidebar:
-    st.header("⚖️ LexLocal")
+    st.markdown("<div class='ll-serif' style='font-size:1.4rem'>LexLocal</div>", unsafe_allow_html=True)
+    st.markdown("<div class='ll-meta' style='margin-bottom:6px'>Status</div>", unsafe_allow_html=True)
     health = llm.health()
     if health["ok"] and health["model_available"]:
-        st.success(f"✓ Ollama local (127.0.0.1) · {llm.model}")
+        ollama_chip = theme.chip(f"Ollama local (127.0.0.1) &middot; {html.escape(llm.model)}", True)
     elif health["ok"]:
-        st.warning(f"Ollama running, but model `{llm.model}` is not pulled")
+        ollama_chip = theme.chip(f"Ollama running, model {html.escape(llm.model)} not pulled", None)
     else:
-        st.error("✗ Ollama not reachable on 127.0.0.1:11434 — rule-based mode only")
-    if netguard.is_active():
-        st.success("✓ Network guard active (loopback only)")
-    else:
-        st.warning("Network guard OFF")
+        ollama_chip = theme.chip("Ollama not reachable: rule-based mode only", False)
     blocked = netguard.blocked_attempts()
-    st.info(f"Blocked outbound attempts: **{len(blocked)}**")
+    emb_ok = _warm_embedder()
+    st.markdown(
+        ollama_chip
+        + theme.chip("Network guard active (loopback only)" if netguard.is_active() else "Network guard OFF",
+                     True if netguard.is_active() else None)
+        + theme.chip(f"Blocked outbound attempts: <b>{len(blocked)}</b>", not blocked)
+        + theme.chip("Embeddings: local bge-small" if emb_ok else f"Embeddings: BM25 only ({html.escape(embedder_status())})",
+                     True if emb_ok else None),
+        unsafe_allow_html=True)
     if blocked:
         with st.expander("Blocked attempts"):
             for b in blocked[-20:]:
-                st.text(f"{b['time']} {b['via']} → {b['host']}:{b['port']}")
-    emb_ok = _warm_embedder()
-    st.caption(f"Embeddings: {'local bge-small ✓' if emb_ok else 'BM25 only (' + embedder_status() + ')'}")
+                st.text(f"{b['time']} {b['via']} -> {b['host']}:{b['port']}")
     models = health.get("models") or [config.MODEL]
     st.selectbox("Model", models, index=models.index(llm.model) if llm.model in models else 0, key="model")
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
     st.divider()
-    if st.button("🗑️ Clear document", use_container_width=True, help="Removes the document and results from memory"):
+    if st.button("Clear document", use_container_width=True, help="Removes the document and results from memory"):
         clear_doc()
         st.rerun()
     st.caption("Session data is held in memory only. Nothing is uploaded or saved to disk.")
@@ -123,14 +132,14 @@ if up is not None:
         del data
 
 if st.session_state.get("error"):
-    st.error(f"⚠️ {st.session_state.error}")
+    st.error(st.session_state.error)
 
 doc = st.session_state.get("doc")
 if doc is not None and "report" not in st.session_state:
     st.write(f"**{esc(doc.name)}** · {len(doc.pages)} page(s) · {len(doc.text):,} characters")
     for w in doc.warnings:
         st.warning(w)
-    if st.button("🔍 Analyse document", type="primary"):
+    if st.button("Analyse document", type="primary"):
         t0 = time.perf_counter()
         with st.status("Analysing locally…", expanded=True) as status:
             bar = st.progress(0.0)
@@ -168,28 +177,29 @@ by_id = {c.id: c for c in chunks}
 
 def show_finding(f, key: str):
     with st.container(border=True):
-        st.markdown(f"**{render.SEVERITY_ICON[f.severity]} {esc(f.title)}**")
+        st.markdown(f"{theme.severity_badge(f.severity, render.SEVERITY_LABEL[f.severity])} "
+                    f"<span class='ll-ftitle'>{html.escape(f.title)}</span>", unsafe_allow_html=True)
         st.caption(f"{render.SEVERITY_LABEL[f.severity]} severity · {render.KIND_LABEL[f.kind]} · "
                    f"Confidence: {render.confidence_label(f.confidence)} ({f.confidence:.2f}) · "
-                   f"✓ Quote verified ({f.match_score:.0f}% match) · source: {f.source}")
+                   f"Quote verified ({f.match_score:.0f}% match) · source: {f.source}")
         st.markdown(esc(f.plain_explanation))
         st.markdown(f"> **Document says (page {f.page}):** “{esc(f.quote)}”")
         if f.ambiguity_note:
-            st.markdown(f"⚠️ **Unclear wording:** {esc(f.ambiguity_note)}")
+            st.markdown(f"**Unclear wording:** {esc(f.ambiguity_note)}")
         with st.expander(f"Show source passage · clause {f.chunk_id} · page {f.page}"):
             c = by_id.get(f.chunk_id)
             if c:
                 st.markdown(f"<div style='white-space:pre-wrap;font-size:0.9em'>{highlight(c.text, f.quote)}</div>",
                             unsafe_allow_html=True)
         if f.needs_lawyer:
-            st.markdown(f"⚖️ **Ask a lawyer about this:** bring the agreement, point to page {f.page}, and ask how this clause affects you.")
+            st.markdown(f"**Ask a lawyer about this:** bring the agreement, point to page {f.page}, and ask how this clause affects you.")
 
 
-st.subheader(f"📄 {esc(report.doc_name)} — {report.doc_type} agreement")
+st.subheader(f"{esc(report.doc_name)} — {report.doc_type} agreement")
 for w in report.warnings:
     st.warning(w)
 if report.injection_flags:
-    st.error(f"🛡️ **Instruction-like text found in the document ({len(report.injection_flags)}).** "
+    st.error(f"**Instruction-like text found in the document ({len(report.injection_flags)}).** "
              "It was treated as untrusted data and did not change the analysis. See the *Safety* tab.")
 
 tabs = st.tabs(["Overview", "Top concerns", "Findings by category", "Missing & vague", "Ask", "Safety & privacy"])
@@ -212,7 +222,7 @@ with tabs[0]:
     if report.jurisdiction_notes:
         st.markdown("#### Jurisdiction-dependent")
         for n in report.jurisdiction_notes:
-            st.info(f"📍 {n} *(general information, not a conclusion about this document)*")
+            st.info(f"{n} *(general information, not a conclusion about this document)*")
     st.markdown("#### Stage timings")
     st.dataframe([{"stage": t.stage, "seconds": t.seconds} for t in report.timings], hide_index=True)
 
@@ -237,7 +247,7 @@ with tabs[3]:
     st.markdown("#### Clauses you might expect but that were not found")
     if report.missing_clauses:
         for m in report.missing_clauses:
-            st.markdown(f"- ❓ The document does not appear to mention **{esc(m)}**.")
+            st.markdown(f"- The document does not appear to mention **{esc(m)}**.")
         st.caption("Based on a checklist for this document type. A clause may exist under different wording.")
     else:
         st.write("All checklist items appear to be mentioned.")
@@ -256,12 +266,12 @@ with tabs[4]:
         with st.chat_message("user"):
             st.write(a.question)
         with st.chat_message("assistant"):
-            tag = {"document_fact": "📄 Document question", "legal_verdict": "⚖️ Needs a lawyer",
-                   "out_of_scope": "🚫 Out of scope"}[a.qtype]
+            tag = {"document_fact": "Document question", "legal_verdict": "Needs a lawyer",
+                   "out_of_scope": "Out of scope"}[a.qtype]
             st.caption(f"{tag} · {a.seconds:.1f}s")
             st.markdown(esc(a.answer))
             for c in a.citations:
-                st.markdown(f"> “{esc(c.quote)}” — *page {c.page}, clause {c.chunk_id}* ✓ verified")
+                st.markdown(f"> “{esc(c.quote)}” — *page {c.page}, clause {c.chunk_id}* · verified")
             if a.related:
                 with st.expander("Closest related clauses"):
                     for r in a.related:
@@ -280,7 +290,7 @@ with tabs[5]:
     st.markdown("#### Prompt-injection scan")
     if report.injection_flags:
         for f in report.injection_flags:
-            st.markdown(f"- 🛡️ page {f.page}: “{esc(f.quote)}”")
+            st.markdown(f"- Page {f.page}: “{esc(f.quote)}”")
         st.caption("These passages look like instructions to an AI. LexLocal removed them from what the model sees and kept them here for you to review.")
     else:
         st.write("No instruction-like text detected.")

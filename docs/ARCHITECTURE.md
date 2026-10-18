@@ -16,9 +16,9 @@ flowchart LR
         G --> A
         R --> A
         A -->|small prompts ≤3k tokens<br/>document in &lt;document&gt; tags| L[llm/client]
-        A --> V[analysis/verifier<br/>exact / fuzzy ≥90 → snap to real span<br/>numbers must be supported]
+        A --> V[analysis/verifier<br/>exact / fuzzy ≥90 -> snap to real span<br/>numbers must be supported]
         V --> REP[Report: verified findings,<br/>missing clauses, vague terms]
-        IDX --> QA[analysis/qa<br/>classify → ground → verify]
+        IDX --> QA[analysis/qa<br/>classify -> ground -> verify]
         QA --> L
         QA --> V
     end
@@ -40,13 +40,13 @@ flowchart LR
 | Findings | `analysis/analyzer.py` | Gemma | One call per category (payments, penalties, deadlines, notice, termination, obligations, rights, restrictions, liability) with ≤3 clauses each |
 | Verify | `analysis/verifier.py` | no | Quote must match the document (normalized exact, else rapidfuzz `partial_ratio` ≥ 90 with ≥85% coverage). It is then snapped to the verbatim span. Sentences with numbers not in the quote or rule facts are dropped, and verdict sentences are scrubbed |
 | Checklists | `analysis/analyzer.py` | no | Missing expected clauses (`knowledge/checklists.json` + synonyms) and vague terms (`vague_terms.json`) |
-| Q&A | `analysis/qa.py` | Gemma | Rules-first classifier (LLM fallback). Hybrid retrieval → grounded answer → verify quotes → topic-overlap check → silent / answer / escalate |
+| Q&A | `analysis/qa.py` | Gemma | Rules-first classifier (LLM fallback). Hybrid retrieval -> grounded answer -> verify quotes -> topic-overlap check -> silent / answer / escalate |
 
 ## Data model (`lexlocal/models.py`)
 
-`Document{pages[], text}` → `Chunk{id, heading, text, start, end, page, categories}` →
+`Document{pages[], text}` -> `Chunk{id, heading, text, start, end, page, categories}` ->
 `Finding{category, title, plain_explanation, quote, chunk_id, page, kind: explicit|interpretation|concern,
-severity, confidence, verified, needs_lawyer, ambiguity_note}` → `Report`.
+severity, confidence, verified, needs_lawyer, ambiguity_note}` -> `Report`.
 
 ## Trust boundaries
 

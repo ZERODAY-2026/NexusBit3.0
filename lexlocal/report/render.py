@@ -11,7 +11,6 @@ KIND_LABEL = {
     Kind.concern: "CONCERN · worth asking a lawyer about",
 }
 SEVERITY_LABEL = {Severity.high: "HIGH", Severity.medium: "MEDIUM", Severity.low: "LOW", Severity.info: "INFO"}
-SEVERITY_ICON = {Severity.high: "🔴", Severity.medium: "🟠", Severity.low: "🟢", Severity.info: "⚪"}
 
 
 def confidence_label(c: float) -> str:
@@ -43,13 +42,13 @@ def by_category(report: Report) -> dict[str, list[Finding]]:
 
 
 def finding_markdown(f: Finding) -> str:
-    lines = [f"### {SEVERITY_ICON[f.severity]} {f.title}",
+    lines = [f"### [{SEVERITY_LABEL[f.severity]}] {f.title}",
              f"*{SEVERITY_LABEL[f.severity]} severity · {KIND_LABEL[f.kind]} · confidence {confidence_label(f.confidence)}*",
              "", f.plain_explanation, "", f"> **Document says (page {f.page}):** “{f.quote}”"]
     if f.ambiguity_note:
-        lines += ["", f"⚠️ **Unclear wording:** {f.ambiguity_note}"]
+        lines += ["", f"**Unclear wording:** {f.ambiguity_note}"]
     if f.needs_lawyer:
-        lines += ["", "⚖️ *Ask a lawyer about this.*"]
+        lines += ["", "*Ask a lawyer about this.*"]
     return "\n".join(lines)
 
 

@@ -30,7 +30,7 @@ telemetry ever leaves the machine.
 | Setup only | `scripts/download_models.py` (bge-small-en-v1.5) | huggingface.co |
 | Setup only | `ollama pull gemma4:e4b`, `gemma4:e2b` | registry.ollama.ai |
 | Runtime | LLM inference | 127.0.0.1:11434 (loopback) |
-| Runtime | Browser ↔ UI | 127.0.0.1:8501 (loopback) |
+| Runtime | Browser <-> UI | 127.0.0.1:8501 (loopback) |
 
 There are no other runtime calls. Any attempt is blocked and counted, and the counter is shown in the sidebar.
 
@@ -65,3 +65,4 @@ RESULT: only loopback connections observed (240 samples). Log: logs\connections.
 - Ollama is a separate process outside netguard. It is local, but run `monitor_connections` to verify.
 - Memory is not securely zeroed. Python strings may stay in RAM until garbage-collected.
 - Streamlit holds uploaded bytes in memory for the session lifetime.
+- **Browser extensions are outside LexLocal's control.** An extension that reads page content (AI sidebars, for example) can see what the UI shows. Use a browser profile without extensions for sensitive documents. During development, a headless Edge with extensions enabled showed requests from an installed AI-sidebar extension. With `--disable-extensions`, the page made only loopback requests.

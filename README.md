@@ -1,4 +1,4 @@
-# ⚖️ LexLocal: private, on-device legal document triage
+# LexLocal: private, on-device legal document triage
 
 **Runs 100% on your device · Not legal advice**
 
@@ -82,8 +82,8 @@ ollama pull gemma4:e4b
 ## Run (works offline)
 
 ```bash
-.venv/Scripts/streamlit run app.py      # Windows
-.venv/bin/streamlit run app.py          # Linux/macOS
+.venv/Scripts/python -m streamlit run app.py      # Windows
+.venv/bin/python -m streamlit run app.py          # Linux/macOS
 ```
 
 Open <http://127.0.0.1:8501>, upload something from `samples/` and click **Analyse document**.
@@ -122,6 +122,7 @@ Knowledge files (checklists, vague terms, disclaimers, …) are in [knowledge/](
 | Very slow analysis | Switch to `gemma4:e2b` and close GPU-heavy apps. The first call includes ~20 s of model load |
 | "Embeddings: BM25 only" | Run `python scripts/download_models.py` once while online |
 | Scanned PDF rejected | Phase 1 has no OCR. Export the document as a text PDF or DOCX |
+| `streamlit` launcher fails after moving the folder | Use `python -m streamlit run app.py`. Console launchers in a venv hard-code the venv's original path |
 | `ollama` command not found on Windows | The API works without it; the setup script pulls models over HTTP |
 
 ## Limitations
@@ -133,7 +134,7 @@ Knowledge files (checklists, vague terms, disclaimers, …) are in [knowledge/](
 - Confidence is a simple heuristic in Phase 1 (quote match × label type), not calibrated.
 - netguard covers Python sockets in the LexLocal process; see [docs/PRIVACY.md](docs/PRIVACY.md) for the threat model.
 
-## ⚠️ Not legal advice
+## Not legal advice
 
 LexLocal explains what a document says. It does not provide legal advice and does not decide whether anything is legal,
 valid, enforceable or fair. For decisions about your situation, consult a qualified lawyer.

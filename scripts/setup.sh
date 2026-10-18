@@ -31,4 +31,4 @@ else
 fi
 
 [ -f .env ] || cp .env.example .env
-echo "Setup complete. Run:  .venv/bin/streamlit run app.py"
+echo "Setup complete. Run:  .venv/bin/python -m streamlit run app.py"

@@ -273,9 +273,9 @@ def main() -> int:
           "|---|---|---|---|---|"] + [
           f"| {n} | {d['seconds']} s | {d['findings']} | {d['rejected']} | {', '.join(d['missed_findings']) or '—'} |" for n, d in per_doc.items()] + [
           "", "## Questions", "", "| Document | Type | Question | Pass | Output (truncated) |", "|---|---|---|---|---|"] + [
-          f"| {n} | {q['type']} | {q['q']} | {'✅' if q['ok'] else '❌'} | {str(q['got']).replace('|', '/')[:90]} |"
+          f"| {n} | {q['type']} | {q['q']} | {'pass' if q['ok'] else 'FAIL'} | {str(q['got']).replace('|', '/')[:90]} |"
           for n, d in per_doc.items() for q in d["questions"]] + [
-          f"| — | out_of_scope | {q['q']} | {'✅' if q['ok'] else '❌'} | {q['got']} |" for q in all_q] + [
+          f"| — | out_of_scope | {q['q']} | {'pass' if q['ok'] else 'FAIL'} | {q['got']} |" for q in all_q] + [
           "", "## Method notes", "",
           "- *Finding recall*: an expected finding is hit if a displayed finding's verified quote contains the gold `quote_contains` text (normalized).",
           "- *Fabricated quotes*: invented sentences plus real sentences with altered numbers, inserted negations, or appended conditions are passed to the verifier; accepted ones are always snapped to real document text, so fabricated text is never displayed.",
