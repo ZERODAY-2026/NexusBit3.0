@@ -1,0 +1,14 @@
+# Requests made by the LexLocal page in headless Edge (Chrome DevTools Protocol, Network.requestWillBeSent),
+# during a full session: upload rental_clean.pdf, Fast analysis, Top concerns, Document view, two Q&A questions.
+# 2026-10-18, LexLocal on http://127.0.0.1:8599
+
+total requests logged: 169
+requests to anything other than 127.0.0.1 / ws://127.0.0.1 / data: / blob: : 2
+  https://api2.sider.ai/api/v1/prompt/list?type=special&app_name=ChitChat_Chrome_Ext...
+  https://api2.sider.ai/api/v1/prompt/list_all?app_name=ChitChat_Chrome_Ext...
+
+Both non-loopback requests come from the "Sider / ChitChat" AI-sidebar browser extension installed on the
+development machine (app_name=ChitChat_Chrome_Ext), which Edge loads even with --disable-extensions (likely
+force-installed). They are not made by LexLocal and carry no LexLocal data, but an extension like this CAN read
+page content: use a browser profile without extensions for sensitive documents (README, PRIVACY.md).
+Requests made by LexLocal's own page: loopback only. No fonts, scripts, styles or images from the internet.

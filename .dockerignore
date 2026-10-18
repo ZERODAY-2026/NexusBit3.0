@@ -1,0 +1,7 @@
+.venv
+.git
+models
+logs
+__pycache__
+.pytest_cache
+*.pyc

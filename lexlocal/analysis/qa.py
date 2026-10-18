@@ -145,6 +145,9 @@ class QAEngine:
             general, _ = guardrails.scrub_verdicts(out.general_info)
         except LLMError:
             pass
-        esc = (f"**Consult:** {lawyer}.\n\n**Bring:** " + "; ".join(bring) +
-               ".\n\n**Questions to ask:**\n" + "\n".join(f"- {q}" for q in asks))
+        def clean(s: str) -> str:  # model items often end with "."; avoid "India.." and "agreement.; Any"
+            return s.strip().rstrip(".;")
+
+        esc = (f"**Consult:** {clean(lawyer)}.\n\n**Bring:** " + "; ".join(clean(b) for b in bring if clean(b)) +
+               ".\n\n**Questions to ask:**\n" + "\n".join(f"- {q.strip()}" for q in asks))
         return {"escalation": esc, "general_info": general or None}

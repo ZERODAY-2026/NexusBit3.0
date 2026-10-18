@@ -1,0 +1,18 @@
+# netguard and privacy tests, 2026-10-18 16:00, Python 3.13.2
+tests/test_privacy.py::test_netguard_blocks_external_ip PASSED           [  6%]
+tests/test_privacy.py::test_netguard_blocks_dns PASSED                   [ 12%]
+tests/test_privacy.py::test_netguard_blocks_requests_library PASSED      [ 18%]
+tests/test_privacy.py::test_netguard_allows_loopback PASSED              [ 25%]
+tests/test_privacy.py::test_llm_client_refuses_remote_host PASSED        [ 31%]
+tests/test_privacy.py::test_logging_filter_redacts_document_text PASSED  [ 37%]
+tests/test_privacy.py::test_pipeline_logs_contain_no_doc_text PASSED     [ 43%]
+tests/test_ui_assets.py::test_no_emojis_or_pictographs_in_repo PASSED    [ 50%]
+tests/test_ui_assets.py::test_ui_has_no_external_urls PASSED             [ 56%]
+tests/test_ui_assets.py::test_splash_respects_reduced_motion_and_is_hidden_from_screen_readers PASSED [ 62%]
+tests/test_ui_assets.py::test_favicon_is_local PASSED                    [ 68%]
+tests/test_vault.py::test_items_are_encrypted_at_rest_and_round_trip PASSED [ 75%]
+tests/test_vault.py::test_wipe_removes_files_dir_and_key PASSED          [ 81%]
+tests/test_vault.py::test_another_vaults_key_cannot_decrypt PASSED       [ 87%]
+tests/test_vault.py::test_garbage_collected_session_wipes_its_vault PASSED [ 93%]
+tests/test_vault.py::test_panic_wipe_all PASSED                          [100%]
+============================= 16 passed in 38.11s =============================

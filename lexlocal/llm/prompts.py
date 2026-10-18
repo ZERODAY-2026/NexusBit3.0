@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from lexlocal.models import Chunk
 
-PROMPT_VERSION = "p1.4"
+PROMPT_VERSION = "p2.0"  # p2.0: pairwise conflict, change explanation, translation and glossary prompts
 
 BASE_SYSTEM = """You are LexLocal, an assistant that explains Indian rental/lease and employment agreements in plain English for ordinary people.
 

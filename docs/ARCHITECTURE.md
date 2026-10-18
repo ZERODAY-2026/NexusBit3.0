@@ -41,6 +41,18 @@ flowchart LR
 | Verify | `analysis/verifier.py` | no | Quote must match the document (normalized exact, else rapidfuzz `partial_ratio` ≥ 90 with ≥85% coverage). It is then snapped to the verbatim span. Sentences with numbers not in the quote or rule facts are dropped, and verdict sentences are scrubbed |
 | Checklists | `analysis/analyzer.py` | no | Missing expected clauses (`knowledge/checklists.json` + synonyms) and vague terms (`vague_terms.json`) |
 | Q&A | `analysis/qa.py` | Gemma | Rules-first classifier (LLM fallback). Hybrid retrieval -> grounded answer -> verify quotes -> topic-overlap check -> silent / answer / escalate |
+| Adversarial | `ingest/adversarial.py` | no | Hidden PDF text (white or background colour, tiny, invisible, transparent, off-page) is flagged **and removed**. Zero-width and bidi controls are stripped, and look-alike Cyrillic/Greek letters in Latin words are normalised |
+| OCR | `ingest/ocr.py` | no | Tesseract 5 (eng+hin) for image-only PDF pages. Per-page confidence feeds finding confidence. Temp files and cache live in the session vault |
+| Key terms | `extract/structured.py` | no | Rule facts filed into parties, term, lock-in, rent/salary, deposit, notice, penalties, dates and governing law, each with its exact sentence |
+| Consistency | `analysis/consistency.py` | rules + Gemma | Conflicts: figures vs words, the same term with two values, term vs dates, lock-in at least as long as the term, two notice periods for one party, plus up to 2 Gemma pair checks with verified quotes. Unusual: one-sided phrases, asymmetric notice, embedding distance to `standard_clauses.json` |
+| Self-consistency | `analysis/analyzer.py` | Gemma | Thorough mode resamples up to 2 high-severity categories at T=0.7. Agreement is a confidence signal |
+| Confidence | `analysis/confidence.py` | no | Weighted quote match, rule agreement, category fit, self-consistency and OCR confidence; calibration in EVALUATION.md |
+| Jurisdiction | `analysis/jurisdiction.py` | no | State from governing law, courts or place of signing. General, number-free notes for the state-dependent topics the document mentions |
+| Glossary | `analysis/glossary.py` | mostly no | 45 team-written definitions. Gemma only for recognised terms missing from the file (labelled) |
+| Compare | `analysis/compare.py` | Gemma (max 4) | Clause alignment (embeddings + text ratio), word diff, material-change tags, explanations with verified quotes from both versions |
+| Translate | `analysis/translate.py` | Gemma | Verified English explanations into hi/kn/ta/ml/te, with a number and verdict guard. Quotes are never translated |
+| Export | `report/export.py` | no | Markdown and PDF (PyMuPDF Story) built in memory |
+| Vault | `privacy/vault.py` | no | Per-session Fernet-encrypted temp store (in-memory key), wiped on delete, panic, session end and exit |
 
 ## Data model (`lexlocal/models.py`)
 

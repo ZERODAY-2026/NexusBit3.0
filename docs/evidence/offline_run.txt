@@ -1,0 +1,7 @@
+# Full pipeline with real Gemma, network guard strict: pytest -m needs_ollama
+# 2026-10-18 16:13, Python 3.13.2, Ollama {"version":"0.40.6"}
+tests/test_integration_ollama.py::test_full_pipeline_verified PASSED     [ 25%]
+tests/test_integration_ollama.py::test_pet_question_silent PASSED        [ 50%]
+tests/test_integration_ollama.py::test_enforceable_escalates PASSED      [ 75%]
+tests/test_integration_ollama.py::test_fact_question PASSED              [100%]
+================ 4 passed, 148 deselected in 295.30s (0:04:55) ================

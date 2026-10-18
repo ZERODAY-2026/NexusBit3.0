@@ -1,7 +1,7 @@
 # Privacy
 
-**Claim:** after setup, LexLocal processes documents entirely on your device. No document text, derived data or
-telemetry ever leaves the machine.
+**Claim:** after setup, no document content leaves the machine during processing. This was verified offline and with connection
+monitoring. LexLocal sends no telemetry.
 
 ## Threat model
 
@@ -24,15 +24,21 @@ telemetry ever leaves the machine.
 
 ## Every network call
 
-| When | What | Destination |
-|---|---|---|
-| Setup only | `pip install` | PyPI / download.pytorch.org |
-| Setup only | `scripts/download_models.py` (bge-small-en-v1.5) | huggingface.co |
-| Setup only | `ollama pull gemma4:e4b`, `gemma4:e2b` | registry.ollama.ai |
-| Runtime | LLM inference | 127.0.0.1:11434 (loopback) |
-| Runtime | Browser <-> UI | 127.0.0.1:8501 (loopback) |
+| When | What | Destination | Document content? |
+|---|---|---|---|
+| Setup only | `pip install` | PyPI, download.pytorch.org | No |
+| Setup only | `scripts/download_models.py` (bge-small-en-v1.5, Tesseract eng/hin data) | huggingface.co, github.com | No |
+| Setup only | `ollama pull gemma4:e4b`, `gemma4:e2b` | registry.ollama.ai | No |
+| Runtime | LLM inference | 127.0.0.1:11434 (loopback) | Stays on the machine |
+| Runtime | Browser <-> UI | 127.0.0.1:8501 (loopback) | Stays on the machine |
+| Runtime, outside LexLocal | The Ollama Windows app may check for updates | ollama.com | No: the Ollama app makes the check itself, and no document data passes to it |
 
-There are no other runtime calls. Any attempt is blocked and counted, and the counter is shown in the sidebar.
+There are no other runtime calls from LexLocal. Any attempt is blocked and counted, and the counter is shown in the
+sidebar. Streamlit usage statistics are off, Hugging Face runs offline, and the UI loads no external fonts, scripts
+or images (`tests/test_ui_assets.py`; a headless-browser request log showed only loopback requests from the page).
+
+**Claim wording:** no document content leaves the machine during processing. This was verified offline and with
+connection monitoring (evidence in `docs/evidence/`).
 
 ## Proof
 
@@ -69,7 +75,7 @@ RESULT: only loopback connections observed (240 samples). Log: logs\connections.
 ## Limitations
 
 - netguard is an in-process Python guard. Native code that opens raw sockets without going through Python's
-  `socket` module would bypass it. For the strongest guarantee, run with the network off, or in Docker with `--network none` (future work).
+  `socket` module would bypass it. For the strongest guarantee, run with the network off, or in Docker with `--network none` ([DOCKER.md](DOCKER.md), not yet verified).
 - Ollama is a separate process outside netguard. It is local, but run `monitor_connections` to verify.
 - Memory is not securely zeroed. Python strings may stay in RAM until garbage-collected.
 - Streamlit holds uploaded bytes in memory for the session lifetime.

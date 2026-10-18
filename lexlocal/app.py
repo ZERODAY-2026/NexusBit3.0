@@ -114,7 +114,8 @@ def panic_wipe():
 
 
 # ------------------------------------------------------------------ page
-st.set_page_config(page_title="LexLocal", page_icon=str(config.ROOT / "lexlocal" / "ui" / "assets" / "favicon.png"), layout="wide")
+ASSETS = config.ROOT / "lexlocal" / "ui" / "assets"
+st.set_page_config(page_title="LexLocal", page_icon=str(ASSETS / "favicon.png"), layout="wide")
 LANG = st.session_state.get("lang", "en")
 disc = knowledge.disclaimer(LANG)  # fixed, pre-translated text; never machine translated
 
@@ -340,7 +341,7 @@ if report.conflicts:
 
 exp1, exp2, _ = st.columns([1.3, 1.3, 4])
 _stem = report.doc_name.rsplit(".", 1)[0]
-exp1.download_button("Download report (Markdown)", export.to_markdown(report).encode("utf-8"),
+exp1.download_button("Download Markdown", export.to_markdown(report).encode("utf-8"),
                      file_name=f"{_stem}-lexlocal.md", mime="text/markdown", width="stretch",
                      help="Built on this device, with citations and disclaimers. Saved by your browser.")
 if exp2.button("Prepare PDF report", width="stretch") or "pdf_report" in st.session_state:
@@ -579,9 +580,9 @@ if view == "Ask":
     st.caption("Answers come only from the document. Questions about legality or what you should do are escalated to a lawyer.")
     hist = st.session_state.setdefault("history", [])
     for a in hist:
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar=str(ASSETS / "avatar_user.png")):
             st.write(a.question)
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar=str(ASSETS / "avatar_assistant.png")):
             tag = {"document_fact": "Document question", "legal_verdict": "Needs a lawyer",
                    "out_of_scope": "Out of scope"}[a.qtype]
             st.caption(f"{tag} · {a.seconds:.1f}s")

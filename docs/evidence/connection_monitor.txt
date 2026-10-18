@@ -1,0 +1,8 @@
+# Connection monitor during a live gemma4:e4b analysis (scripts/benchmark.py), 2026-10-18 16:04
+> powershell -ExecutionPolicy Bypass -File scripts\monitor_connections.ps1 -Seconds 90 -Out docs\evidence\connections.csv
+RESULT: only loopback connections observed (642 samples). Log: docs\evidence\connections.csv
+
+process        loopback samples   non-loopback samples
+python         252                0     (LexLocal pipeline -> Ollama API on 127.0.0.1:11434)
+ollama         302                0     (Ollama server <-> its llama-server runner)
+llama-server   88                 0
