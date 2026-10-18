@@ -38,9 +38,8 @@ before they sign, and who can't, or shouldn't, upload it to a cloud AI.
 ## Scope
 
 - **Documents:** Indian rental, lease and leave-and-license agreements; employment agreements and offer letters.
-- **Language:** English documents. Explanations can be shown in Hindi, Kannada, Tamil, Malayalam or Telugu
-  (translated locally). Quotes always stay in the original.
-- **Formats:** PDF (text or scanned), DOCX, TXT (up to 25 MB and 200 pages). Scanned pages are read with local
+- **Language:** English documents.
+- **Input:** upload a PDF (text or scanned), DOCX or TXT file (up to 25 MB and 200 pages), or type or paste the agreement text. Scanned pages are read with local
   Tesseract OCR (English and Hindi), with a confidence score for each page.
 - **Out of scope:** legal advice, verdicts on legality or enforceability, and other contract types (they are
   analysed with a warning).
@@ -57,14 +56,13 @@ before they sign, and who can't, or shouldn't, upload it to a cloud AI.
 | Conflicts | Places that disagree: figures vs words, the same term with two values, term vs dates, lock-in vs term, two notice periods for one party, plus Gemma clause-pair checks. Both quotes are shown side by side |
 | Worth asking about | One-sided wording, notice periods that differ between the parties, and wording far from typical clauses (embedding distance). Never framed as "illegal" |
 | Jurisdiction | Detects the state from governing law, courts or place of signing. General notes for state-dependent topics. No statutory limits are stated |
-| Q&A | Questions are routed as **document fact** (answered only from verified passages, otherwise *"The document is silent on this"*), **legal verdict** (no verdict, specific lawyer escalation) or **out of scope** (declined) |
+| Follow-up questions | After the analysis, a chat box at the bottom of every view takes follow-up questions (with starter suggestions). Questions are routed as **document fact** (answered only from verified passages, otherwise *"The document is silent on this"*), **legal verdict** (no verdict, specific lawyer escalation) or **out of scope** (declined) |
 | Safety | Prompt-injection scan and removal; hidden PDF text, zero-width characters and look-alike letters detected and kept out of the analysis |
 | Compare versions | Clause alignment that survives renumbering, word-level diff, material-change tags (money, dates, periods, termination, penalties, deposit) and Gemma explanations quoting both versions |
-| Glossary and languages | Legal terms found in the document with plain meanings. Explanations in hi, kn, ta, ml and te, translated locally |
+| Glossary | Legal terms found in the document with plain meanings, each shown with the sentence where it appears |
 | Modes | **Fast** (gemma4:e2b) or **Thorough** (gemma4:e4b plus self-consistency checks) |
 | Privacy controls | Network guard (loopback only) with a blocked-attempt counter, no document text in logs, an encrypted temporary store, **Delete document** and **Panic wipe** |
 | Export | Markdown or PDF report with citations and disclaimers, built on the device |
-| Benchmarks | Latency per stage, tokens/s, peak RAM and VRAM for E2B vs E4B by document length ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)) |
 
 **Anti-fabrication:** a model quote is shown only if it matches the document (normalised exact match, or fuzzy
 match of at least 90). It is then replaced by the real document span. Numbers in explanations must appear in the
@@ -86,7 +84,7 @@ From [docs/EVALUATION.md](docs/EVALUATION.md) (gemma4:e4b, synthetic gold set, n
 | Hidden-content techniques detected (`adversarial.pdf`) | 7/7, all kept out of the analysis |
 | Hand-labelled finding accuracy (calibration set) | 92% (47/51) |
 | Blocked outbound connections during evaluation | 0 |
-| Automated tests | **148 passed** (`pytest -m "not needs_ollama"`), plus 4 end-to-end tests with real Gemma |
+| Automated tests | **144 passed** (`pytest -m "not needs_ollama"`), plus 4 end-to-end tests with real Gemma |
 
 The gold set is small and synthetic. See the caveats in EVALUATION.md.
 
@@ -228,7 +226,6 @@ glossary, disclaimers, jurisdiction topics) are in [knowledge/](knowledge/).
 - Missing-clause, conflict and one-sided checks are rule- and reference-based. They say "does not appear to" and
   "worth asking about", and they can miss unusual wording.
 - OCR quality depends on the scan. Low-confidence pages are flagged and their findings get lower confidence.
-- Translations are machine-made on the device and may be imprecise. Disclaimer translations still need review by native speakers.
 - The evaluation set is small and synthetic.
 - The network guard covers Python sockets in the LexLocal process. For the strongest guarantee, run with the network off
   (or try the unverified Docker `--network none` setup). See [docs/PRIVACY.md](docs/PRIVACY.md).
@@ -244,7 +241,7 @@ A **verify-then-display pipeline for small local LLMs**. Gemma 4, running on a l
 schema-constrained JSON over small clause windows. A deterministic verifier lets through only claims whose quotes
 match the document, and snaps them to the real text. It also checks every number against rule-extracted facts and
 removes legal-verdict language. The same rule applies everywhere Gemma speaks: clause-pair conflicts, version
-changes, translations and glossary gaps all have to pass verification, the number check and the verdict check before
+changes and glossary gaps all have to pass verification, the number check and the verdict check before
 they are shown. Rules come first wherever they can (key terms, conflicts, jurisdiction, adversarial content), and the
 model fills the gaps.
 

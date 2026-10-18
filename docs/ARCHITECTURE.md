@@ -50,7 +50,6 @@ flowchart LR
 | Jurisdiction | `analysis/jurisdiction.py` | no | State from governing law, courts or place of signing. General, number-free notes for the state-dependent topics the document mentions |
 | Glossary | `analysis/glossary.py` | mostly no | 45 team-written definitions. Gemma only for recognised terms missing from the file (labelled) |
 | Compare | `analysis/compare.py` | Gemma (max 4) | Clause alignment (embeddings + text ratio), word diff, material-change tags, explanations with verified quotes from both versions |
-| Translate | `analysis/translate.py` | Gemma | Verified English explanations into hi/kn/ta/ml/te, with a number and verdict guard. Quotes are never translated |
 | Export | `report/export.py` | no | Markdown and PDF (PyMuPDF Story) built in memory |
 | Vault | `privacy/vault.py` | no | Per-session Fernet-encrypted temp store (in-memory key), wiped on delete, panic, session end and exit |
 

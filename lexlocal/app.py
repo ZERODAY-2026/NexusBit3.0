@@ -16,7 +16,7 @@ if config.NETGUARD_MODE == "strict":
 import streamlit as st  # noqa: E402
 
 from lexlocal import knowledge  # noqa: E402
-from lexlocal.analysis import consistency, translate  # noqa: E402
+from lexlocal.analysis import consistency  # noqa: E402
 from lexlocal.analysis.analyzer import Analyzer  # noqa: E402
 from lexlocal.analysis.qa import QAEngine  # noqa: E402
 from lexlocal.extract import structured  # noqa: E402
@@ -40,15 +40,9 @@ def esc(text: str) -> str:
     return _MD_SPECIAL.sub(r"\\\1", text or "")
 
 
-def show_text(english: str) -> None:
-    """Show LexLocal's own explanation, translated if a verified translation exists (quotes are never translated)."""
-    lang = st.session_state.get("lang", "en")
-    translated = st.session_state.get("tr", {}).get(lang, {}).get(english) if lang != "en" else None
-    if translated:
-        st.markdown(esc(translated))
-        st.caption(f"English: {english}")
-    else:
-        st.markdown(esc(english))
+def show_text(text: str) -> None:
+    """Show one of LexLocal's own explanations (escaped so document text renders literally)."""
+    st.markdown(esc(text))
 
 
 def highlight(passage: str, quote: str | list[str]) -> str:
@@ -69,9 +63,9 @@ def highlight(passage: str, quote: str | list[str]) -> str:
     return "".join(out) + html.escape(passage[pos:])
 
 
-DOC_KEYS = ["pdf_report", "tr", "cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
+DOC_KEYS = ["pdf_report", "cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
             "nav_clause", "nav_quote", "view"]
-VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Glossary", "Document", "Ask", "Safety and privacy"]
+VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Glossary", "Document", "Safety and privacy"]
 
 
 def jump_to(chunk_id: str, quote: str | None = None):
@@ -116,8 +110,7 @@ def panic_wipe():
 # ------------------------------------------------------------------ page
 ASSETS = config.ROOT / "lexlocal" / "ui" / "assets"
 st.set_page_config(page_title="LexLocal", page_icon=str(ASSETS / "favicon.png"), layout="wide")
-LANG = st.session_state.get("lang", "en")
-disc = knowledge.disclaimer(LANG)  # fixed, pre-translated text; never machine translated
+disc = knowledge.disclaimer("en")
 
 st.markdown(theme.CSS, unsafe_allow_html=True)
 if not st.session_state.get("splash_shown"):
@@ -193,10 +186,7 @@ with st.sidebar:
                          model_override=None if st.session_state.model_pick == "(mode default)" else st.session_state.model_pick))
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
-    mode = st.radio("Mode", ["Analyse a document", "Compare two versions", "Benchmarks"], key="mode")
-    st.selectbox("Explanation language", ["en", *translate.LANGUAGES], key="lang",
-                 format_func=lambda c: knowledge.disclaimer(c)["name"],
-                 help="Explanations are translated on this device by the local model. Quotes stay in the original.")
+    mode = st.radio("Mode", ["Analyse a document", "Compare two versions"], key="mode")
     st.divider()
     if st.button("Delete document", width="stretch",
                  help="Removes the document, results and its encrypted temporary files from this session"):
@@ -210,12 +200,6 @@ with st.sidebar:
     if st.session_state.pop("wiped", False):
         st.success("Everything from this session was wiped.")
 
-if mode == "Benchmarks":
-    from lexlocal.ui import bench_page
-
-    bench_page.render()
-    st.stop()
-
 if mode == "Compare two versions":
     from lexlocal.ui import compare_page
 
@@ -223,24 +207,44 @@ if mode == "Compare two versions":
     st.stop()
 
 # ------------------------------------------------------------------ upload
-up = st.file_uploader("Upload a rental/lease or employment agreement (PDF, DOCX or TXT, max 25 MB)",
-                      type=["pdf", "docx", "txt"], key=f"upload_{st.session_state.get('upload_gen', 0)}")
-if up is not None:
-    data = up.getvalue()
+def load_document(name: str, data: bytes) -> None:
+    """Parse an uploaded file or pasted text into the session (memory only). Same path for both inputs."""
     h = hashlib.sha256(data).hexdigest()
-    if st.session_state.get("doc_hash") != h:
-        clear_doc()
-        st.session_state.doc_hash = h
-        try:
-            with st.spinner("Reading the document locally (scanned pages are read with local OCR, about 5 s per page)..."):
-                doc = parse_bytes(up.name, data, vault=session_vault())
-            st.session_state.doc = doc
-            if doc.kind == "pdf":  # kept in memory only, for the highlighted page view
-                st.session_state.doc_bytes = data
-            register_document(doc.text)
-        except IngestError as e:
-            st.session_state.error = e.message
-        del data
+    if st.session_state.get("doc_hash") == h:
+        return
+    clear_doc()
+    st.session_state.doc_hash = h
+    try:
+        with st.spinner("Reading the document locally (scanned pages are read with local OCR, about 5 s per page)..."):
+            doc = parse_bytes(name, data, vault=session_vault())
+        st.session_state.doc = doc
+        if doc.kind == "pdf":  # kept in memory only, for the highlighted page view
+            st.session_state.doc_bytes = data
+        register_document(doc.text)
+    except IngestError as e:
+        st.session_state.error = e.message
+
+
+gen = st.session_state.get("upload_gen", 0)
+source = st.radio("How do you want to add the agreement?", ["Upload a file", "Type or paste text"],
+                  horizontal=True, key="input_source")
+if source == "Upload a file":
+    up = st.file_uploader("Upload a rental/lease or employment agreement (PDF, DOCX or TXT, max 25 MB)",
+                          type=["pdf", "docx", "txt"], key=f"upload_{gen}")
+    if up is not None:
+        load_document(up.name, up.getvalue())
+else:
+    # A form submits the text and the button together (a plain button can arrive before the pasted text does).
+    with st.form(f"paste_form_{gen}", border=False):
+        pasted = st.text_area("Type or paste the agreement text", height=240, key=f"paste_{gen}",
+                              placeholder="Paste the full text of the rental, lease or employment agreement here. "
+                                          "It stays on this device.")
+        submitted = st.form_submit_button("Use this text", type="primary")
+    if submitted:
+        if pasted.strip():
+            load_document("pasted-agreement.txt", pasted.encode("utf-8"))
+        else:
+            st.warning("Type or paste the agreement text first.")
 
 if st.session_state.get("error"):
     st.error(st.session_state.error)
@@ -358,26 +362,6 @@ if exp2.button("Prepare PDF report", width="stretch") or "pdf_report" in st.sess
                          mime="application/pdf", width="stretch")
 
 st.session_state.setdefault("view", "Overview")
-if LANG != "en":
-    name = knowledge.disclaimer(LANG)["name"]
-    if LANG not in st.session_state.setdefault("tr", {}):
-        texts = list(dict.fromkeys([report.summary] + [f.plain_explanation for f in report.findings]
-                                   + [f.plain_explanation for f in report.summary_verified_quotes]
-                                   + [g.definition for g in report.glossary]))
-        texts = [x for x in texts if x]
-        c1, c2 = st.columns([3, 1], vertical_alignment="center")
-        c1.markdown(f"Explanations can be shown in **{html.escape(name)}**. They are translated on this device "
-                    f"({len(texts)} texts). Quotes from the document stay in the original language.", unsafe_allow_html=True)
-        if c2.button("Translate", type="primary", width="stretch"):
-            with st.spinner(f"Translating into {name} locally..."):
-                out = translate.translate_texts(llm, texts, LANG) if llm.health().get("ok") else [None] * len(texts)
-            st.session_state.tr[LANG] = {src: dst for src, dst in zip(texts, out) if dst}
-            st.rerun()
-    else:
-        done = len(st.session_state.tr[LANG])
-        st.caption(f"{html.escape(knowledge.disclaimer(LANG)['machine_translated'])} ({done} texts translated; "
-                   "any that failed the checks are shown in English.)")
-
 view = st.segmented_control("View", VIEWS, key="view", label_visibility="collapsed") or "Overview"
 
 if view == "Overview":
@@ -583,33 +567,6 @@ if view == "Document":
     if doc.kind != "pdf":
         st.caption("Page images are available for PDF uploads. For DOCX and TXT the clause text is shown with the quote highlighted.")
 
-if view == "Ask":
-    st.caption("Answers come only from the document. Questions about legality or what you should do are escalated to a lawyer.")
-    hist = st.session_state.setdefault("history", [])
-    for a in hist:
-        with st.chat_message("user", avatar=str(ASSETS / "avatar_user.png")):
-            st.write(a.question)
-        with st.chat_message("assistant", avatar=str(ASSETS / "avatar_assistant.png")):
-            tag = {"document_fact": "Document question", "legal_verdict": "Needs a lawyer",
-                   "out_of_scope": "Out of scope"}[a.qtype]
-            st.caption(f"{tag} · {a.seconds:.1f}s")
-            st.markdown(esc(a.answer))
-            for c in a.citations:
-                st.markdown(f"> “{esc(c.quote)}” — *page {c.page}, clause {c.chunk_id}* · verified")
-            if a.related:
-                with st.expander("Closest related clauses"):
-                    for r in a.related:
-                        st.markdown(f"**Clause {r.id} · page {r.page}** — {esc(r.text[:500])}{'…' if len(r.text) > 500 else ''}")
-            if a.general_info:
-                st.info(f"**General information (not about your document, not legal advice):** {a.general_info}")
-            if a.escalation:
-                st.markdown(a.escalation)
-    q = st.chat_input("Ask about this document, e.g. “What is the notice period?”")
-    if q:
-        with st.spinner("Thinking locally…"):
-            hist.append(st.session_state.qa.ask(q))
-        st.rerun()
-
 if view == "Safety and privacy":
     st.markdown("#### Hidden or disguised content")
     if report.adversarial:
@@ -640,3 +597,52 @@ if view == "Safety and privacy":
     st.markdown(f"- Encrypted temporary store: {'active, ' + str(len(v.files())) + ' encrypted file(s)' if v is not None and v.active else 'empty (nothing written to disk)'}.")
     st.markdown(f"#### Verification\n{len(report.findings)} findings shown, all with verified verbatim quotes. "
                 f"{len(report.rejected)} model claims were rejected or trimmed by the verifier/guardrails and are not shown.")
+
+# ------------------------------------------------------------------ follow-up questions (shown under every view)
+st.divider()
+st.markdown("#### Follow-up questions")
+st.caption("Ask anything about this agreement. Answers come only from the document, with verified quotes. "
+           "If the document doesn't say, LexLocal tells you. Questions about legality or what you should do get "
+           "a specific lawyer referral instead of a verdict.")
+hist = st.session_state.setdefault("history", [])
+
+
+def ask(question: str) -> None:
+    with st.spinner("Answering locally..."):
+        hist.append(st.session_state.qa.ask(question))
+
+
+if not hist:
+    examples = (["What is the monthly rent and when is it due?", "How much notice do I need to give to leave?",
+                 "When will I get my deposit back?", "Can I keep a pet?"] if report.doc_type != "employment" else
+                ["What is my notice period?", "How many days of paid leave do I get?",
+                 "What happens if I resign early?", "Can I work from home?"])
+    cols = st.columns(len(examples))
+    for col, ex in zip(cols, examples):
+        if col.button(ex, width="stretch", type="tertiary", key=f"ex_{ex}"):
+            ask(ex)
+            st.rerun()
+for a in hist:
+    with st.chat_message("user", avatar=str(ASSETS / "avatar_user.png")):
+        st.write(a.question)
+    with st.chat_message("assistant", avatar=str(ASSETS / "avatar_assistant.png")):
+        tag = {"document_fact": "From the document", "legal_verdict": "Needs a lawyer",
+               "out_of_scope": "Out of scope"}[a.qtype]
+        st.caption(f"{tag} · answered in {a.seconds:.1f}s")
+        st.markdown(esc(a.answer))
+        for c in a.citations:
+            st.markdown(f"> “{esc(c.quote)}” — *page {c.page}, clause {c.chunk_id}* · verified")
+        if a.related:
+            with st.expander("Closest related clauses"):
+                for r in a.related:
+                    st.markdown(f"**Clause {r.id} · page {r.page}** — {esc(r.text[:500])}{'…' if len(r.text) > 500 else ''}")
+        if a.general_info:
+            st.info(f"**General information (not about your document, not legal advice):** {a.general_info}")
+        if a.escalation:
+            st.markdown(a.escalation)
+
+# Top-level chat input: Streamlit pins it to the bottom of the page, so it is always within reach.
+q = st.chat_input("Ask a follow-up question about this agreement, e.g. “What is the notice period?”")
+if q and q.strip():
+    ask(q.strip())
+    st.rerun()
