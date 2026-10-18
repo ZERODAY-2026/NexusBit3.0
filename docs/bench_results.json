@@ -1,0 +1,52 @@
+{
+  "ollama_version": "0.40.6",
+  "models": {
+    "gemma4:e4b": {
+      "cold_load_s": 21.39,
+      "median_latency_s": 22.2,
+      "median_tok_s": 14.4,
+      "median_prompt_tok_s": 4308.6,
+      "median_out_tokens": 318,
+      "prompt_tokens": 574,
+      "valid_json_rate": 1.0,
+      "size_bytes": 6583656505,
+      "details": {
+        "parent_model": "gemma4-validation-20260929:e4b-imatrix-attention-q6-q8-draft2",
+        "format": "gguf",
+        "family": "gemma4",
+        "families": [
+          "gemma4"
+        ],
+        "parameter_size": "7.5B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 131072,
+        "embedding_length": 2560,
+        "runner": "llamacpp"
+      }
+    },
+    "gemma4:e2b": {
+      "cold_load_s": 21.43,
+      "median_latency_s": 8.32,
+      "median_tok_s": 65.1,
+      "median_prompt_tok_s": 5109.3,
+      "median_out_tokens": 319,
+      "prompt_tokens": 574,
+      "valid_json_rate": 1.0,
+      "size_bytes": 4587156505,
+      "details": {
+        "parent_model": "gemma4-validation-20260929:e2b-imatrix-attention-q6-q8-draft2",
+        "format": "gguf",
+        "family": "gemma4",
+        "families": [
+          "gemma4"
+        ],
+        "parameter_size": "4.6B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 131072,
+        "embedding_length": 1536,
+        "runner": "llamacpp"
+      }
+    }
+  },
+  "recommended_default": "gemma4:e4b"
+}

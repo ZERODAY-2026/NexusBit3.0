@@ -1,0 +1,9 @@
+{
+  "_placeholder": true,
+  "en": {
+    "disclaimer": "LexLocal explains what a document says. It is not legal advice and does not decide whether anything is legal, valid, enforceable or fair.",
+    "escalation": "For a decision about your situation, consult a qualified lawyer.",
+    "silent": "The document is silent on this.",
+    "refusal": "I can't answer that from this document."
+  }
+}

@@ -1,0 +1,40 @@
+EMPLOYMENT AGREEMENT
+
+This Employment Agreement is made on 2nd June, 2026 between Nimbus Software Solutions Private Limited, a company incorporated under the Companies Act, 2013, having its office at Whitefield, Bengaluru (hereinafter referred to as the "Company") and Ms. Kavya Reddy, residing at HSR Layout, Bengaluru (hereinafter referred to as the "Employee").
+
+1. APPOINTMENT
+1.1 The Company appoints the Employee as Software Engineer with effect from 1st July, 2026 (the "Joining Date").
+1.2 The Employee will be on probation for a period of 6 months from the Joining Date. The Company may extend the probation period at its discretion.
+
+2. COMPENSATION
+2.1 The Employee shall be paid an annual cost to company (CTC) of Rs. 12,00,000/- (Rupees Twelve Lakhs only), as detailed in Annexure A.
+2.2 Salary shall be paid monthly on or before the 7th day of the following month, after deduction of applicable taxes.
+2.3 The Employee may be eligible for an annual performance bonus of up to 10% of the fixed salary, at the sole discretion of the Company.
+
+3. WORKING HOURS AND LEAVE
+3.1 The normal working hours are 9:30 AM to 6:30 PM, Monday to Friday. The Employee may be required to work additional hours as reasonably required by business needs.
+3.2 The Employee is entitled to 18 days of paid leave per calendar year, in addition to public holidays declared by the Company.
+
+4. CONFIDENTIALITY
+4.1 The Employee shall not, during or after employment, disclose any confidential information of the Company to any third party.
+
+5. INTELLECTUAL PROPERTY
+5.1 All work product, inventions and software developed by the Employee during the course of employment shall be the exclusive property of the Company.
+
+6. NON-COMPETE AND NON-SOLICITATION
+6.1 For a period of 2 years after leaving the Company, the Employee shall not join or work for any competitor of the Company anywhere in India.
+6.2 For a period of 1 year after leaving, the Employee shall not solicit any client or employee of the Company.
+
+7. TRAINING BOND
+7.1 If the Employee resigns within 18 months of the Joining Date, the Employee shall pay the Company Rs. 2,00,000/- towards training costs.
+
+8. TERMINATION
+8.1 During probation, either party may terminate employment by giving 15 days' written notice.
+8.2 After confirmation, either party may terminate employment by giving 90 days' written notice or salary in lieu of notice.
+8.3 The Company may terminate employment immediately, without notice, for misconduct, including dishonesty, breach of confidentiality or habitual absence.
+
+9. GOVERNING LAW
+9.1 This Agreement shall be governed by the laws of India and the courts at Bengaluru shall have jurisdiction.
+
+For Nimbus Software Solutions Pvt. Ltd.                    Accepted by: Kavya Reddy
+Authorised Signatory (HR)

@@ -1,0 +1,5 @@
+{
+  "_placeholder": true,
+  "rental": ["rent", "security deposit", "lock-in period", "notice period", "termination", "maintenance and repairs", "rent escalation", "subletting", "use of premises", "governing law", "dispute resolution", "utilities", "stamp duty and registration"],
+  "employment": ["salary", "probation", "notice period", "termination", "working hours", "leave", "confidentiality", "non-compete", "intellectual property", "governing law", "dispute resolution", "benefits"]
+}

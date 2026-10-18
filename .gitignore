@@ -1,0 +1,22 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Secrets / local config
+.env
+
+# Large local artefacts (downloaded at setup time)
+models/
+cache/
+uploads/
+
+# Logs and runtime output
+*.log
+logs/
+
+# Private documents — never commit real agreements
+private/
