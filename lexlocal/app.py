@@ -131,6 +131,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Shown until the local models are ready (first start loads the embedding model, about 10 s), so the page
+# never looks stuck. Cleared at the end of the sidebar status block below.
+_loading = st.empty()
+_loading.markdown(theme.loading_tag("Loading local models, please wait. The first start takes about 10-20 seconds."),
+                  unsafe_allow_html=True)
+
 
 @st.cache_resource(show_spinner=False)
 def _ocr_status():
@@ -170,6 +176,7 @@ with st.sidebar:
         + theme.chip(f"OCR: {html.escape(_ocr_status()[1])}" if _ocr_status()[0] else "OCR: not installed (scanned PDFs declined)",
                      True if _ocr_status()[0] else None),
         unsafe_allow_html=True)
+    _loading.empty()  # models ready: remove the "please wait" tag
     if blocked:
         with st.expander("Blocked attempts"):
             for b in blocked[-20:]:

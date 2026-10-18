@@ -52,6 +52,12 @@ section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"] > d
 section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"]:hover {{ background: {CARD}; }}
 section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"] p {{ text-align: left; font-size: 0.82rem; line-height: 1.3; }}
 section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[data-testid="stBaseButton-tertiary"]) {{ margin-bottom: -10px; }}
+.ll-loading {{ display: inline-flex; align-items: center; gap: 10px; font-size: 0.88rem; color: {TEXT};
+  background: {CARD}; border: 1px solid {BORDER}; border-radius: 999px; padding: 6px 14px; margin: 0 0 12px; }}
+.ll-loading .ll-pulse {{ width: 9px; height: 9px; border-radius: 50%; background: {PRIMARY};
+  animation: llPulse 1.1s ease-in-out infinite; }}
+@keyframes llPulse {{ 0%, 100% {{ opacity: 0.25; transform: scale(0.8); }} 50% {{ opacity: 1; transform: scale(1); }} }}
+@media (prefers-reduced-motion: reduce) {{ .ll-loading .ll-pulse {{ animation: none; opacity: 0.8; }} }}
 .ll-ftitle {{ font-family: {SERIF}; font-size: 1.08rem; font-weight: 600; color: {TEXT}; }}
 </style>
 """
@@ -115,3 +121,9 @@ def chip(text: str, ok: bool | None) -> str:
     """Status line for the sidebar. ok=True green, False red, None amber; the text carries the meaning."""
     color = {True: "#3F6E4A", False: "#9B2C2C", None: "#A86412"}[ok]
     return f"<div class='ll-chip'>{dot(color)}<span>{text}</span></div>"
+
+
+def loading_tag(text: str) -> str:
+    """Small 'please wait' pill; role=status so screen readers announce it."""
+    return (f"<div class='ll-loading' role='status' aria-live='polite'>"
+            f"<span class='ll-pulse' aria-hidden='true'></span><span>{html.escape(text)}</span></div>")
