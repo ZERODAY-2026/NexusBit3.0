@@ -26,7 +26,7 @@ from lexlocal.llm.client import OllamaClient  # noqa: E402
 from lexlocal.models import SEVERITY_ORDER, Kind, Severity  # noqa: E402
 from lexlocal.privacy.vault import Vault  # noqa: E402
 from lexlocal.privacy.logging_setup import clear_document, register_document, setup_logging  # noqa: E402
-from lexlocal.report import render  # noqa: E402
+from lexlocal.report import export, render  # noqa: E402
 from lexlocal.retrieval.index import HybridIndex, embedder_status, get_embedder  # noqa: E402
 from lexlocal.ui import theme  # noqa: E402
 
@@ -69,7 +69,7 @@ def highlight(passage: str, quote: str | list[str]) -> str:
     return "".join(out) + html.escape(passage[pos:])
 
 
-DOC_KEYS = ["tr", "cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
+DOC_KEYS = ["pdf_report", "tr", "cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
             "nav_clause", "nav_quote", "view"]
 VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Glossary", "Document", "Ask", "Safety and privacy"]
 
@@ -185,7 +185,7 @@ with st.sidebar:
                          model_override=None if st.session_state.model_pick == "(mode default)" else st.session_state.model_pick))
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
-    mode = st.radio("Mode", ["Analyse a document", "Compare two versions"], key="mode")
+    mode = st.radio("Mode", ["Analyse a document", "Compare two versions", "Benchmarks"], key="mode")
     st.selectbox("Explanation language", ["en", *translate.LANGUAGES], key="lang",
                  format_func=lambda c: knowledge.disclaimer(c)["name"],
                  help="Explanations are translated on this device by the local model. Quotes stay in the original.")
@@ -201,6 +201,12 @@ with st.sidebar:
                "memory, and are wiped on delete, on panic wipe and when the session ends.")
     if st.session_state.pop("wiped", False):
         st.success("Everything from this session was wiped.")
+
+if mode == "Benchmarks":
+    from lexlocal.ui import bench_page
+
+    bench_page.render()
+    st.stop()
 
 if mode == "Compare two versions":
     from lexlocal.ui import compare_page
@@ -331,6 +337,17 @@ if report.adversarial:
              "characters or look-alike letters were kept out of the analysis. See *Safety and privacy*.")
 if report.conflicts:
     st.warning(f"**{len(report.conflicts)} place(s) in the document seem to disagree with each other.** See *Worth asking about*.")
+
+exp1, exp2, _ = st.columns([1.3, 1.3, 4])
+_stem = report.doc_name.rsplit(".", 1)[0]
+exp1.download_button("Download report (Markdown)", export.to_markdown(report).encode("utf-8"),
+                     file_name=f"{_stem}-lexlocal.md", mime="text/markdown", width="stretch",
+                     help="Built on this device, with citations and disclaimers. Saved by your browser.")
+if exp2.button("Prepare PDF report", width="stretch") or "pdf_report" in st.session_state:
+    if "pdf_report" not in st.session_state:
+        st.session_state.pdf_report = export.to_pdf(report)
+    exp2.download_button("Download PDF", st.session_state.pdf_report, file_name=f"{_stem}-lexlocal.pdf",
+                         mime="application/pdf", width="stretch")
 
 st.session_state.setdefault("view", "Overview")
 if LANG != "en":
