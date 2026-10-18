@@ -141,3 +141,20 @@ def test_placeholder_ambiguity_is_dropped(clean_doc, fake_llm_cls):
     report, _ = Analyzer(fake_llm_cls({"FindingsOut": fn})).analyze(clean_doc, "auto")
     late = next(f for f in report.findings if f.title == "Late fee")
     assert late.ambiguity_note is None
+
+
+def test_fast_mode_skips_second_samples_thorough_runs_them(clean_doc, fake_llm_cls):
+    def fn(user):
+        if "**penalties**" not in user:
+            return {"findings": []}
+        return {"findings": [{"title": "Late fee", "explanation": "If rent is late you pay Rs. 500 for every week of delay.",
+                              "quote": REAL, "clause_id": _clause_of(user, "late fee"), "kind": "explicit",
+                              "severity": "high", "needs_lawyer": False, "ambiguity": ""}]}
+    counts = {}
+    for name, sc in (("fast", 0), ("thorough", 2)):
+        llm = fake_llm_cls({"FindingsOut": fn})
+        report, _ = Analyzer(llm, self_consistency=sc, pairwise=0).analyze(clean_doc, "auto")
+        counts[name] = sum(1 for c, _ in llm.calls if c == "FindingsOut")
+        late = next(f for f in report.findings if f.title == "Late fee")
+        assert ("consistency" in late.signals) == (sc > 0)
+    assert counts["thorough"] == counts["fast"] + 1  # one resample of the penalties category

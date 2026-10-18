@@ -94,7 +94,10 @@ def _overlaps(a: Finding, b: Finding) -> bool:
 
 
 class Analyzer:
-    def __init__(self, llm: Optional[OllamaClient] = None):
+    def __init__(self, llm: Optional[OllamaClient] = None, self_consistency: Optional[int] = None,
+                 pairwise: Optional[int] = None):
+        self.self_consistency = config.SELF_CONSISTENCY_CALLS if self_consistency is None else self_consistency
+        self.pairwise = config.PAIRWISE_CHECKS if pairwise is None else pairwise
         self._facts: list = []
         self._chunk_cats: dict[str, list[str]] = {}
         self._page_signals: dict[int, dict] = {}  # e.g. {"ocr": 0.83} for scanned pages
@@ -274,11 +277,11 @@ class Analyzer:
         stage("findings", t)
 
         # ---- self-consistency: resample categories with high-severity findings once at a higher temperature
-        if llm_ok and config.SELF_CONSISTENCY_CALLS > 0:
+        if llm_ok and self.self_consistency > 0:
             t = time.perf_counter()
             high_cats = list(dict.fromkeys(f.category for f in findings
                                            if f.severity == Severity.high and f.source == "llm" and f.category in cat_prompts))
-            for cat in high_cats[:config.SELF_CONSISTENCY_CALLS]:
+            for cat in high_cats[:self.self_consistency]:
                 progress(f"Double-checking {cats.label(cat).lower()} (Gemma, second sample)", 0.91)
                 try:
                     out = self.llm.generate_json(prompts.BASE_SYSTEM, cat_prompts[cat], prompts.FindingsOut,
@@ -299,11 +302,11 @@ class Analyzer:
                 findings.append(rf)
 
         # ---- model check for contradictions between clause pairs (capped; rule conflicts are not re-checked)
-        if llm_ok and config.PAIRWISE_CHECKS > 0:
+        if llm_ok and self.pairwise > 0:
             t = time.perf_counter()
             progress("Checking clause pairs for contradictions (Gemma)", 0.93)
             covered = {c.chunk_a for c in report.conflicts} | {c.chunk_b for c in report.conflicts}
-            extra, rej = consistency.model_conflicts(self.llm, llm_chunks, verifier, config.PAIRWISE_CHECKS, covered)
+            extra, rej = consistency.model_conflicts(self.llm, llm_chunks, verifier, self.pairwise, covered)
             report.conflicts += extra
             report.rejected += rej
             stage("pairwise", t)

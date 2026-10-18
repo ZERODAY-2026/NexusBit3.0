@@ -71,3 +71,11 @@ DOCS_DIR = ROOT / "docs"
 CONF_HIGH = float(os.environ.get("LEXLOCAL_CONF_HIGH", "0.85"))
 CONF_MEDIUM = float(os.environ.get("LEXLOCAL_CONF_MEDIUM", "0.65"))
 SELF_CONSISTENCY_CALLS = int(os.environ.get("LEXLOCAL_SELF_CONSISTENCY", "2"))  # extra samples for high-severity categories
+
+# --- Analysis modes (sidebar) ----------------------------------------------------------------
+MODES = {
+    "Fast": {"model": FAST_MODEL, "self_consistency": 0, "pairwise": 1,
+             "help": "gemma4:e2b, one pass. About 3x faster; good for a first read."},
+    "Thorough": {"model": MODEL, "self_consistency": SELF_CONSISTENCY_CALLS, "pairwise": PAIRWISE_CHECKS,
+                 "help": "gemma4:e4b with a second sample for high-severity findings and clause-pair checks."},
+}

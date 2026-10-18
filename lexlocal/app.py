@@ -143,7 +143,8 @@ def _warm_embedder():
     return get_embedder() is not None
 
 
-llm = OllamaClient(model=st.session_state.get("model", config.MODEL))
+MODE = config.MODES[st.session_state.get("analysis_mode", "Thorough")]
+llm = OllamaClient(model=st.session_state.get("model_override") or MODE["model"])
 
 # ------------------------------------------------------------------ sidebar
 with st.sidebar:
@@ -172,8 +173,16 @@ with st.sidebar:
         with st.expander("Blocked attempts"):
             for b in blocked[-20:]:
                 st.text(f"{b['time']} {b['via']} -> {b['host']}:{b['port']}")
-    models = health.get("models") or [config.MODEL]
-    st.selectbox("Model", models, index=models.index(llm.model) if llm.model in models else 0, key="model")
+    st.radio("Analysis mode", list(config.MODES), key="analysis_mode", index=1, horizontal=True,
+             help=" ".join(f"{k}: {v['help']}" for k, v in config.MODES.items()))
+    st.caption(MODE["help"])
+    models = health.get("models") or []
+    if health["ok"] and llm.model not in models and models:
+        st.warning(f"{llm.model} is not pulled. Pick an available model below or run `ollama pull {llm.model}`.")
+    with st.expander("Use a different local model"):
+        st.selectbox("Model", ["(mode default)"] + models, key="model_pick",
+                     on_change=lambda: st.session_state.update(
+                         model_override=None if st.session_state.model_pick == "(mode default)" else st.session_state.model_pick))
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
     mode = st.radio("Mode", ["Analyse a document", "Compare two versions"], key="mode")
@@ -244,7 +253,7 @@ if doc is not None and "report" not in st.session_state:
                 bar.progress(min(frac, 1.0), text=stage)
                 log_area.markdown("\n".join(f"- {s}" for s in steps))
 
-            report, chunks = Analyzer(llm).analyze(doc, doc_type_choice, progress)
+            report, chunks = Analyzer(llm, MODE["self_consistency"], MODE["pairwise"]).analyze(doc, doc_type_choice, progress)
             progress("Building search index", 0.98)
             index = HybridIndex(chunks)
             st.session_state.update(report=report, chunks=chunks, index=index, history=[],
