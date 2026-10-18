@@ -58,7 +58,7 @@ def highlight(passage: str, quote: str | list[str]) -> str:
     return "".join(out) + html.escape(passage[pos:])
 
 
-DOC_KEYS = ["doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
+DOC_KEYS = ["cmp_result", "cmp_key", "doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
             "nav_clause", "nav_quote", "view"]
 VIEWS = ["Overview", "Top concerns", "Worth asking about", "Findings by category", "Missing and vague", "Document", "Ask", "Safety and privacy"]
 
@@ -164,6 +164,7 @@ with st.sidebar:
     st.selectbox("Model", models, index=models.index(llm.model) if llm.model in models else 0, key="model")
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
+    mode = st.radio("Mode", ["Analyse a document", "Compare two versions"], key="mode")
     st.divider()
     if st.button("Delete document", width="stretch",
                  help="Removes the document, results and its encrypted temporary files from this session"):
@@ -176,6 +177,12 @@ with st.sidebar:
                "memory, and are wiped on delete, on panic wipe and when the session ends.")
     if st.session_state.pop("wiped", False):
         st.success("Everything from this session was wiped.")
+
+if mode == "Compare two versions":
+    from lexlocal.ui import compare_page
+
+    compare_page.render(llm, session_vault(), esc)
+    st.stop()
 
 # ------------------------------------------------------------------ upload
 up = st.file_uploader("Upload a rental/lease or employment agreement (PDF, DOCX or TXT, max 25 MB)",
