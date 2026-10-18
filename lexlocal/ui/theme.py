@@ -46,6 +46,12 @@ blockquote {{ border-left: 3px solid {PRIMARY}; color: {TEXT}; }}
 .ll-chip {{ display: flex; align-items: center; gap: 8px; font-size: 0.86rem; padding: 6px 10px; margin: 4px 0;
   background: {CARD}; border: 1px solid {BORDER}; border-radius: 8px; color: {TEXT}; }}
 .ll-meta {{ font-size: 0.8rem; color: {MUTED}; }}
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"] {{
+  justify-content: flex-start; text-align: left; min-height: 0; padding: 3px 6px; margin: 0; border-radius: 6px; }}
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"] > div {{ justify-content: flex-start; width: 100%; }}
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"]:hover {{ background: {CARD}; }}
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-tertiary"] p {{ text-align: left; font-size: 0.82rem; line-height: 1.3; }}
+section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has(button[data-testid="stBaseButton-tertiary"]) {{ margin-bottom: -10px; }}
 .ll-ftitle {{ font-family: {SERIF}; font-size: 1.08rem; font-weight: 600; color: {TEXT}; }}
 </style>
 """

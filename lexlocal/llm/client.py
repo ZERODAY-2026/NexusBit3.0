@@ -90,6 +90,7 @@ class OllamaClient:
             "prompt_tokens": data.get("prompt_eval_count", 0),
             "output_tokens": data.get("eval_count", 0),
             "eval_seconds": data.get("eval_duration", 0) / 1e9,
+            "done_reason": data.get("done_reason", ""),
         }
         with _stats_lock:
             STATS["calls"] += 1
@@ -110,8 +111,17 @@ class OllamaClient:
         schema = model_cls.model_json_schema()
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         last_err = ""
+        budget = max_tokens or config.LLM_MAX_TOKENS
         for attempt in range(2):
-            content, _ = self._chat(messages, schema, max_tokens or config.LLM_MAX_TOKENS)
+            content, meta = self._chat(messages, schema, budget)
+            if meta.get("done_reason") == "length":
+                # Truncated at num_predict: a repair prompt cannot fix that, a larger budget can.
+                last_err = "output truncated"
+                with _stats_lock:
+                    STATS["retries"] += 1
+                log.warning("llm output truncated at %d tokens, attempt %d", budget, attempt + 1)
+                budget = int(budget * 1.75)
+                continue
             try:
                 return model_cls.model_validate(json.loads(_strip_fences(content)))
             except (json.JSONDecodeError, ValidationError) as e:

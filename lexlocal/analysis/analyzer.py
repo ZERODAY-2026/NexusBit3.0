@@ -219,7 +219,7 @@ class Analyzer:
             try:
                 out = self.llm.generate_json(prompts.BASE_SYSTEM,
                                              prompts.summary_prompt(doc_type, pick, config.CHUNK_CHAR_BUDGET),
-                                             prompts.SummaryOut, max_tokens=600)
+                                             prompts.SummaryOut, max_tokens=800)
                 summ, _ = guardrails.scrub_verdicts(out.summary)
                 summ, _ = check_numbers(summ, " ".join(k.quote for k in out.key_points), fact_values)
                 report.summary = summ

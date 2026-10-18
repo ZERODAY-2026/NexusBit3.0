@@ -59,7 +59,7 @@ def _assemble(name: str, kind: str, page_texts: list[str], warnings: list[str]) 
 
 
 def _parse_pdf(name: str, data: bytes) -> Document:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
 
     try:
         doc = fitz.open(stream=data, filetype="pdf")

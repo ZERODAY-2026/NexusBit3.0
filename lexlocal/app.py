@@ -21,7 +21,7 @@ from lexlocal.analysis.qa import QAEngine  # noqa: E402
 from lexlocal.extract.categories import label  # noqa: E402
 from lexlocal.ingest.parser import IngestError, parse_bytes  # noqa: E402
 from lexlocal.llm.client import OllamaClient  # noqa: E402
-from lexlocal.models import Kind  # noqa: E402
+from lexlocal.models import SEVERITY_ORDER, Kind  # noqa: E402
 from lexlocal.privacy.logging_setup import clear_document, register_document, setup_logging  # noqa: E402
 from lexlocal.report import render  # noqa: E402
 from lexlocal.retrieval.index import HybridIndex, embedder_status, get_embedder  # noqa: E402
@@ -37,15 +37,34 @@ def esc(text: str) -> str:
     return _MD_SPECIAL.sub(r"\\\1", text or "")
 
 
-def highlight(passage: str, quote: str) -> str:
-    """HTML-escaped passage with the quote wrapped in <mark>."""
-    i = passage.find(quote)
-    if i < 0:
-        return html.escape(passage)
-    return (html.escape(passage[:i]) + "<mark>" + html.escape(quote) + "</mark>" + html.escape(passage[i + len(quote):]))
+def highlight(passage: str, quote: str | list[str]) -> str:
+    """HTML-escaped passage with each quote wrapped in <mark> (overlapping spans are merged)."""
+    spans = []
+    for q in [quote] if isinstance(quote, str) else quote:
+        i = passage.find(q) if q else -1
+        if i >= 0:
+            spans.append((i, i + len(q)))
+    out, pos = [], 0
+    for s, e in sorted(spans):
+        if s < pos:
+            s = pos
+        if s >= e:
+            continue
+        out += [html.escape(passage[pos:s]), "<mark>", html.escape(passage[s:e]), "</mark>"]
+        pos = e
+    return "".join(out) + html.escape(passage[pos:])
 
 
-DOC_KEYS = ["doc", "report", "chunks", "qa", "history", "doc_hash", "error", "index"]
+DOC_KEYS = ["doc", "doc_bytes", "report", "chunks", "qa", "history", "doc_hash", "error", "index",
+            "nav_clause", "nav_quote", "view"]
+VIEWS = ["Overview", "Top concerns", "Findings by category", "Missing and vague", "Document", "Ask", "Safety and privacy"]
+
+
+def jump_to(chunk_id: str, quote: str | None = None):
+    """Button callback: open the Document view at a clause (runs before widgets are rebuilt)."""
+    st.session_state.view = "Document"
+    st.session_state.nav_clause = chunk_id
+    st.session_state.nav_quote = quote
 
 
 def clear_doc():
@@ -109,7 +128,7 @@ with st.sidebar:
     doc_type_choice = st.selectbox("Document type", ["auto", "rental", "employment"],
                                    help="auto = detect from the text")
     st.divider()
-    if st.button("Clear document", use_container_width=True, help="Removes the document and results from memory"):
+    if st.button("Clear document", width="stretch", help="Removes the document and results from memory"):
         clear_doc()
         st.rerun()
     st.caption("Session data is held in memory only. Nothing is uploaded or saved to disk.")
@@ -126,6 +145,8 @@ if up is not None:
         try:
             doc = parse_bytes(up.name, data)
             st.session_state.doc = doc
+            if doc.kind == "pdf":  # kept in memory only, for the highlighted page view
+                st.session_state.doc_bytes = data
             register_document(doc.text)
         except IngestError as e:
             st.session_state.error = e.message
@@ -173,6 +194,20 @@ if report is None:
 
 chunks = st.session_state.chunks
 by_id = {c.id: c for c in chunks}
+findings_by_chunk: dict[str, list] = {}
+for _f in report.findings:
+    findings_by_chunk.setdefault(_f.chunk_id, []).append(_f)
+
+
+def clause_severity(cid: str):
+    fs = findings_by_chunk.get(cid)
+    return min((f.severity for f in fs), key=lambda s: SEVERITY_ORDER[s]) if fs else None
+
+
+def clause_label(c) -> str:
+    sev = clause_severity(c.id)
+    name = c.heading or c.text.strip().splitlines()[0][:60]
+    return f"{render.SEVERITY_LABEL[sev] if sev else 'No findings'} · {c.id} · {name}"
 
 
 def show_finding(f, key: str):
@@ -193,18 +228,29 @@ def show_finding(f, key: str):
                             unsafe_allow_html=True)
         if f.needs_lawyer:
             st.markdown(f"**Ask a lawyer about this:** bring the agreement, point to page {f.page}, and ask how this clause affects you.")
+        st.button("View in document", key=f"jump_{key}", on_click=jump_to, args=(f.chunk_id, f.quote))
 
+
+# Clause outline in the sidebar: every clause with a text severity label; click to jump.
+with st.sidebar:
+    st.divider()
+    st.markdown("<div class='ll-meta' style='margin-bottom:4px'>Clause outline</div>", unsafe_allow_html=True)
+    with st.container(height=360, border=False):
+        for c in chunks:
+            st.button(clause_label(c), key=f"outline_{c.id}", on_click=jump_to, args=(c.id,),
+                      width="stretch", type="tertiary")
 
 st.subheader(f"{esc(report.doc_name)} — {report.doc_type} agreement")
 for w in report.warnings:
     st.warning(w)
 if report.injection_flags:
     st.error(f"**Instruction-like text found in the document ({len(report.injection_flags)}).** "
-             "It was treated as untrusted data and did not change the analysis. See the *Safety* tab.")
+             "It was treated as untrusted data and did not change the analysis. See *Safety and privacy*.")
 
-tabs = st.tabs(["Overview", "Top concerns", "Findings by category", "Missing & vague", "Ask", "Safety & privacy"])
+st.session_state.setdefault("view", "Overview")
+view = st.segmented_control("View", VIEWS, key="view", label_visibility="collapsed") or "Overview"
 
-with tabs[0]:
+if view == "Overview":
     st.markdown("#### Plain-language summary")
     st.markdown(esc(report.summary) if report.summary else "_Summary unavailable (local model not reachable)._")
     if report.summary_verified_quotes:
@@ -226,7 +272,7 @@ with tabs[0]:
     st.markdown("#### Stage timings")
     st.dataframe([{"stage": t.stage, "seconds": t.seconds} for t in report.timings], hide_index=True)
 
-with tabs[1]:
+if view == "Top concerns":
     tc = render.top_concerns(report)
     if not tc:
         st.info("No high-severity points or concerns were identified. This does not mean the document is fine — "
@@ -234,7 +280,7 @@ with tabs[1]:
     for i, f in enumerate(tc):
         show_finding(f, f"tc{i}")
 
-with tabs[2]:
+if view == "Findings by category":
     groups = render.by_category(report)
     if not groups:
         st.info("No verified findings.")
@@ -243,7 +289,7 @@ with tabs[2]:
             for i, f in enumerate(items):
                 show_finding(f, f"{cat}{i}")
 
-with tabs[3]:
+if view == "Missing and vague":
     st.markdown("#### Clauses you might expect but that were not found")
     if report.missing_clauses:
         for m in report.missing_clauses:
@@ -259,7 +305,59 @@ with tabs[3]:
     else:
         st.write("No vague terms from the list were found.")
 
-with tabs[4]:
+if view == "Document":
+    ids = [c.id for c in chunks]
+    if st.session_state.get("nav_clause") not in ids:
+        st.session_state.nav_clause = ids[0]
+    nav_a, nav_b, nav_c = st.columns([6, 1, 1], vertical_alignment="bottom")
+    with nav_a:
+        cid = st.selectbox("Clause", ids, key="nav_clause", format_func=lambda i: clause_label(by_id[i]),
+                           on_change=lambda: st.session_state.update(nav_quote=None))
+    pos = ids.index(cid)
+    nav_b.button("Previous", disabled=pos == 0, width="stretch",
+                 on_click=jump_to, args=(ids[max(pos - 1, 0)],))
+    nav_c.button("Next", disabled=pos == len(ids) - 1, width="stretch",
+                 on_click=jump_to, args=(ids[min(pos + 1, len(ids) - 1)],))
+    c = by_id[cid]
+    cf = findings_by_chunk.get(cid, [])
+    focus = st.session_state.get("nav_quote")
+    quotes = [focus] if focus else [f.quote for f in cf]
+    pdf = st.session_state.get("doc_bytes")
+    left, right = st.columns([1, 1]) if pdf else (st.container(), None)
+    with left:
+        st.markdown(f"<div class='ll-meta'>Clause {html.escape(c.id)} · page {c.page}"
+                    f"{' · highlighted: the selected quote' if focus else ''}</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(f"<div style='white-space:pre-wrap;font-size:0.93em;line-height:1.55'>{highlight(c.text, quotes)}</div>",
+                        unsafe_allow_html=True)
+        if cf:
+            st.markdown(f"**Findings in this clause ({len(cf)})**")
+            for f in cf:
+                st.markdown(f"{theme.severity_badge(f.severity, render.SEVERITY_LABEL[f.severity])} "
+                            f"{html.escape(f.title)}", unsafe_allow_html=True)
+                st.caption(f.plain_explanation)
+        else:
+            st.caption("No verified findings point to this clause. That is not a guarantee it is unimportant.")
+    if right is not None:
+        with right:
+            from lexlocal.report.pdfview import render_page
+
+            page_no = next((f.page for f in cf if f.quote == focus), c.page)
+            png, found = render_page(pdf, page_no, quotes)
+            if quotes and not found and page_no < len(doc.pages):  # clause may continue on the next page
+                png2, found2 = render_page(pdf, page_no + 1, quotes)
+                if found2:
+                    png, found, page_no = png2, found2, page_no + 1
+            st.markdown(f"<div class='ll-meta'>Original PDF · page {page_no} of {len(doc.pages)}"
+                        f"{f' · {found} quote(s) highlighted' if quotes else ''}</div>", unsafe_allow_html=True)
+            st.image(png, width="stretch")
+            if quotes and not found:
+                st.caption("The quote could not be located on the page image (PDF text layout), "
+                           "but it was verified against the extracted text.")
+    if doc.kind != "pdf":
+        st.caption("Page images are available for PDF uploads. For DOCX and TXT the clause text is shown with the quote highlighted.")
+
+if view == "Ask":
     st.caption("Answers come only from the document. Questions about legality or what you should do are escalated to a lawyer.")
     hist = st.session_state.setdefault("history", [])
     for a in hist:
@@ -286,7 +384,7 @@ with tabs[4]:
             hist.append(st.session_state.qa.ask(q))
         st.rerun()
 
-with tabs[5]:
+if view == "Safety and privacy":
     st.markdown("#### Prompt-injection scan")
     if report.injection_flags:
         for f in report.injection_flags:
